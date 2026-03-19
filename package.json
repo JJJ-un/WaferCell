@@ -10,11 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "d3": "^7.9.0",
+    "d3-voronoi-treemap": "^1.1.2",
+    "lodash": "^4.17.23",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/d3": "^7.4.3",
+    "@types/lodash": "^4.17.24",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
