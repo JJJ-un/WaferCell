@@ -32,6 +32,7 @@ export interface Stock {
     changePercent: number;
     volume: number; 
     price: number; 
+    sectorName: SectorName;
 }
 
 /**
@@ -44,6 +45,8 @@ export interface Stock {
  * @property {number} companyCount - 해당 섹터에 포함된 총 상장 기업 수
  */
 
+// 어떻게 보면 이건 카테고리 처럼 빠질 수도 있다. 
+// 애초에 이게 필요없어질 수도
 export interface Sector {
     sectorName: SectorName;
     change: number;

@@ -3,6 +3,8 @@ import { type Stock } from '../shared/types/Semiconductor';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
+import { useState } from 'react';
+import { StockTooltip } from '@/entities/stock/Stock';
 
 interface StockProps {
     data: Stock[]; 
@@ -14,6 +16,8 @@ interface HierarchyDataType {
 }
 
 export const BasicVoronoi = ({ data }:StockProps ) => {
+
+  const [hoveredStock, setHoveredStock] = useState<Stock | null>(null)
 
   // 전체 틀의 높이 예상 => css 파일로 못옮기나?
   const width = 600;
@@ -55,30 +59,36 @@ export const BasicVoronoi = ({ data }:StockProps ) => {
 }, []);
 
   return (
-    // 폴리곤의 형태는 배열이다. d를 정의해야하는데 d는 d3에서 스인것
-    <svg width={width} height={height} style={{ border: '1px solid #ccc' }}>
-      {polygons.map((d: any, i) => (
-        <g key={i}>
-          {/* 다각형 그리기 */}
-          {/*d.polygon은 꼭짓점이다.  */}
-          {/* 호벗 시 컴포넌트 띄울 수 있을까?? */}
-          <path
-            d={d3.line()(d.polygon) + "z"}
-            fill={colorScale(d.data.changePercent)}
-            stroke="#fff"
-          />
-          {/* 중앙에 텍스트 배치(당연히 컴포넌트 들어갈 수 있을듯) */}
-          <text
-            x={d3.polygonCentroid(d.polygon)[0]}
-            y={d3.polygonCentroid(d.polygon)[1]}
-            fontSize="12"
-            textAnchor="middle"
-            fill="#fff"
-          >
-            {d.data.ticker}
-          </text>
-        </g>
-      ))}
-    </svg>
+    <div>
+      <svg width={width} height={height} style={{ border: '1px solid #ccc' }}>
+        {polygons.map((d: any, i) => (
+          <g key={i}>
+            {/* 다각형 그리기 */}
+            {/*d.polygon은 꼭짓점이다.  */}
+            {/* 호벗 시 컴포넌트 띄울 수 있을까?? */}
+            <path
+              d={d3.line()(d.polygon) + "z"}
+              fill={colorScale(d.data.changePercent)}
+              stroke="#fff"
+              onMouseEnter={() => setHoveredStock(d.data)}
+              onMouseLeave={() => setHoveredStock(null)}
+            />
+            {/* 중앙에 텍스트 배치(당연히 컴포넌트 들어갈 수 있을듯) */}
+            <text
+              x={d3.polygonCentroid(d.polygon)[0]}
+              y={d3.polygonCentroid(d.polygon)[1]}
+              fontSize="12"
+              textAnchor="middle"
+              fill="#fff"
+            >
+              {d.data.ticker}
+            </text>
+          </g>
+        ))}
+      </svg>
+      {hoveredStock&&(
+        <StockTooltip data={hoveredStock}/>
+      )}
+    </div>
   );
 };
