@@ -1,4 +1,3 @@
-import SelectIcon from "@/shared/assets/icons/common/select.svg";
 import { type ComponentProps } from "react";
 
 export interface DropdownIconProps extends ComponentProps<"span"> {
@@ -11,7 +10,7 @@ function DropdownIcon({
 }: DropdownIconProps) {
   return (
     <span {...props}>
-      {children ?? <SelectIcon />}
+      {children}
     </span>
   );
 }

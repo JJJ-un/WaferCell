@@ -1,4 +1,4 @@
-import { MOCK_SECTORS } from "./sectorMocks";
+import { MOCK_SECTORS } from "./sector.mock";
 import { type SemiconductorMarket } from "../types/Semiconductor";
 
 export const MOCK_SEMICONDUCTOR_MARKET: SemiconductorMarket = {

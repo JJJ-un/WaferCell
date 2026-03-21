@@ -1,4 +1,3 @@
-import { BasicVoronoi } from "@/features/BasicVoronoi";
 import { type Stock } from "@/shared/types/Semiconductor";
 
 export const MOCK_STOCKS: Stock[] = [
@@ -9,14 +8,3 @@ export const MOCK_STOCKS: Stock[] = [
   { id: 's5', ticker: '리노공업', value: 28000, change: 800, changePercent: 0.35, volume: 120000, price: 215000, sectorName: "팹리스" },
   { id: 's6', ticker: '가온칩스', value: 8500, change: 4200, changePercent: 7.5, volume: 1100000, price: 92000, sectorName: "수혜주" },
 ];
-
-export const DashBoard = () => {
-    // 데이터 담는 상태 선언 or 커스텀 훅으로 상태가져와기 
-
-    return (
-        //해당 위치에 드롭다운 컴포넌트 넣기 
-        <BasicVoronoi data={MOCK_STOCKS}/>
-    )
-
-
-}
