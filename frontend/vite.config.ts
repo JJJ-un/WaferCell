@@ -11,7 +11,7 @@ export default defineConfig({
     proxy: {
       // 해당 부분 추후 API 주소에 맞춰 수정해야함
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:8080",
         changeOrigin: true,
       },
     },
