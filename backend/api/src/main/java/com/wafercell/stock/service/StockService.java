@@ -1,15 +1,21 @@
 package com.wafercell.stock.service;
 
+import com.wafercell.stock.client.KoreaInvestRealtimeClient;
 import com.wafercell.stock.client.StockClient;
 import com.wafercell.stock.dto.HeatmapNode;
+import com.wafercell.stock.dto.StockUpdate;
 import com.wafercell.stock.entity.Stock;
 import com.wafercell.stock.repository.StockRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -19,107 +25,127 @@ public class StockService {
 
     private final StockRepository stockRepository;
     private final StockClient stockClient;
+    private final KoreaInvestRealtimeClient realtimeClient;
+    private final Map<String, HeatmapNode> stockCache = new ConcurrentHashMap<>();
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void init() {
+        refreshAllStockData();
+    }
 
     /**
-     * 전체 히트맵 데이터를 생성합니다. (전체 -> 섹터 -> 하위섹터 -> 종목)
+     * DB에 등록된 모든 종목을 웹소켓 서버에 구독 요청합니다.
      */
-    public HeatmapNode getTotalHeatmap() {
+    public void subscribeAllStocks() {
+        log.info("모든 종목 실시간 구독 시작...");
+        List<Stock> allStocks = stockRepository.findAll();
+        for (Stock stock : allStocks) {
+            realtimeClient.subscribe(stock.getExchange(), stock.getTicker());
+        }
+    }
+
+    @Scheduled(cron = "0 0 * * * *")
+    public void refreshAllStockData() {
+        log.info("주가 데이터 최신화 시작...");
         List<Stock> allStocks = stockRepository.findAll();
         
-        // 1. 대분류 섹터별로 그룹화
+        if (allStocks.isEmpty()) {
+            log.warn("DB에 등록된 종목이 없습니다.");
+            return;
+        }
+
+        for (Stock stock : allStocks) {
+            try {
+                HeatmapNode node = fetchStockNodeFromApi(stock);
+                stockCache.put(stock.getTicker(), node);
+                
+                stock.updateMarketCap(node.getValue());
+                stockRepository.save(stock);
+                
+                log.debug("데이터 로드 완료: {}", stock.getTicker());
+                Thread.sleep(100); 
+            } catch (Exception e) {
+                log.error("데이터 로드 실패: {} - {}", stock.getTicker(), e.getMessage());
+                double lastVal = stock.getMarketCap() != null ? stock.getMarketCap() : 100.0;
+                stockCache.putIfAbsent(stock.getTicker(), HeatmapNode.builder().name(stock.getTicker()).value(lastVal).rate(0.0).build());
+            }
+        }
+        log.info("주가 데이터 최신화 완료 (총 {}종목)", stockCache.size());
+        
+        // 데이터 로드 후 웹소켓 구독 수행
+        subscribeAllStocks();
+    }
+
+    public void updateStockCache(StockUpdate update) {
+        String ticker = update.getTicker();
+        HeatmapNode existing = stockCache.get(ticker);
+        if (existing != null) {
+            try {
+                double newRate = Double.parseDouble(update.getRate());
+                stockCache.put(ticker, HeatmapNode.builder()
+                        .name(ticker)
+                        .value(existing.getValue())
+                        .rate(newRate)
+                        .build());
+            } catch (Exception e) {
+                log.error("캐시 업데이트 오류: {}", e.getMessage());
+            }
+        }
+    }
+
+    public HeatmapNode getTotalHeatmap() {
+        List<Stock> allStocks = stockRepository.findAll();
         Map<String, List<Stock>> sectors = allStocks.stream()
                 .collect(Collectors.groupingBy(Stock::getSector));
 
         List<HeatmapNode> sectorNodes = sectors.entrySet().stream()
-                .map(entry -> getSectorHeatmap(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
-
-        // 전체 평균 등락률 및 총 시가총액 계산
-        double totalValue = sectorNodes.stream().mapToDouble(HeatmapNode::getValue).sum();
-        double avgRate = sectorNodes.stream().mapToDouble(n -> n.getRate() * (n.getValue() / totalValue)).sum();
-
-        return HeatmapNode.builder()
-                .name("전체")
-                .value(totalValue)
-                .rate(avgRate)
-                .children(sectorNodes)
-                .build();
-    }
-
-    /**
-     * 특정 섹터 하위의 히트맵 데이터를 생성합니다. (섹터 -> 하위섹터 -> 종목)
-     */
-    public HeatmapNode getSectorHeatmap(String sectorName) {
-        List<Stock> sectorStocks = stockRepository.findBySector(sectorName);
-        return getSectorHeatmap(sectorName, sectorStocks);
-    }
-
-    /**
-     * 내부 가공 로직: 종목 리스트를 계층형 노드로 변환
-     */
-    private HeatmapNode getSectorHeatmap(String sectorName, List<Stock> stocks) {
-        // 1. 하위 섹터별로 그룹화 (팹리스, 파운드리 등)
-        Map<String, List<Stock>> subSectors = stocks.stream()
-                .collect(Collectors.groupingBy(Stock::getSubSector));
-
-        List<HeatmapNode> subSectorNodes = subSectors.entrySet().stream()
                 .map(entry -> {
                     List<HeatmapNode> stockNodes = entry.getValue().stream()
-                            .map(this::fetchStockNode)
+                            .map(stock -> stockCache.getOrDefault(stock.getTicker(), 
+                                    HeatmapNode.builder().name(stock.getTicker()).value(100.0).rate(0.0).build()))
                             .collect(Collectors.toList());
 
-                    double subTotalValue = stockNodes.stream().mapToDouble(HeatmapNode::getValue).sum();
-                    double subAvgRate = stockNodes.stream()
-                            .filter(n -> n.getValue() > 0)
-                            .mapToDouble(n -> n.getRate() * (n.getValue() / subTotalValue))
-                            .sum();
-
-                    return HeatmapNode.builder()
-                            .name(entry.getKey())
-                            .value(subTotalValue)
-                            .rate(subAvgRate)
-                            .children(stockNodes)
-                            .build();
+                    double val = stockNodes.stream().mapToDouble(HeatmapNode::getValue).sum();
+                    double rate = val == 0 ? 0 : stockNodes.stream().mapToDouble(n -> n.getRate() * (n.getValue() / val)).sum();
+                    return HeatmapNode.builder().name(entry.getKey()).value(val).rate(rate).children(stockNodes).build();
                 }).collect(Collectors.toList());
 
-        double sectorTotalValue = subSectorNodes.stream().mapToDouble(HeatmapNode::getValue).sum();
-        double sectorAvgRate = subSectorNodes.stream()
-                .filter(n -> n.getValue() > 0)
-                .mapToDouble(n -> n.getRate() * (n.getValue() / sectorTotalValue))
-                .sum();
+        double totalVal = sectorNodes.stream().mapToDouble(HeatmapNode::getValue).sum();
+        double totalRate = totalVal == 0 ? 0 : sectorNodes.stream().mapToDouble(n -> n.getRate() * (n.getValue() / totalVal)).sum();
 
+        return HeatmapNode.builder().name("반도체 전체").value(totalVal).rate(totalRate).children(sectorNodes).build();
+    }
+
+    private HeatmapNode fetchStockNodeFromApi(Stock stock) {
+        Map<String, Object> response = stockClient.getOverseasStockDetail(stock.getExchange(), stock.getTicker());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> output = (Map<String, Object>) response.get("output");
+        
+        if (output == null) {
+            throw new RuntimeException("API 응답에 output 데이터가 없습니다.");
+        }
+
+        double marketCap = parseDouble(output, "tomv");
+        double last = parseDouble(output, "last");
+        double base = parseDouble(output, "base");
+        double rate = (base == 0) ? 0 : ((last - base) / base) * 100;
+
+        stock.updateRealtimeInfo(last, rate, marketCap);
+        
         return HeatmapNode.builder()
-                .name(sectorName)
-                .value(sectorTotalValue)
-                .rate(sectorAvgRate)
-                .children(subSectorNodes)
+                .name(stock.getTicker())
+                .value(marketCap)
+                .rate(rate)
                 .build();
     }
 
-    /**
-     * 한국투자증권 API로부터 실제 데이터를 가져와 단일 종목 노드를 생성합니다.
-     */
-    private HeatmapNode fetchStockNode(Stock stock) {
+    private double parseDouble(Map<String, Object> map, String key) {
+        Object val = map.get(key);
+        if (val == null) return 0.0;
         try {
-            Map<String, Object> response = stockClient.getOverseasStockPrice(stock.getExchange(), stock.getTicker());
-            Map<String, Object> output = (Map<String, Object>) response.get("output");
-
-            // 등락률(rate)과 시가총액(t_val) 추출 및 변환
-            double rate = Double.parseDouble(output.get("rate").toString());
-            double marketCap = Double.parseDouble(output.get("t_val").toString()); // 시가총액 단위: 백만달러
-
-            return HeatmapNode.builder()
-                    .name(stock.getTicker())
-                    .value(marketCap)
-                    .rate(rate)
-                    .build();
-        } catch (Exception e) {
-            log.error("종목 데이터 조회 실패: {} - {}", stock.getTicker(), e.getMessage());
-            return HeatmapNode.builder()
-                    .name(stock.getTicker())
-                    .value(0.0)
-                    .rate(0.0)
-                    .build();
+            return Double.parseDouble(val.toString().trim());
+        } catch (NumberFormatException e) {
+            return 0.0;
         }
     }
 }

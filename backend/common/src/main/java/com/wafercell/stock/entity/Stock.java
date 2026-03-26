@@ -1,5 +1,6 @@
 package com.wafercell.stock.entity;
 
+import com.wafercell.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,13 +9,13 @@ import lombok.NoArgsConstructor;
 
 /**
  * 주식 종목 정보를 관리하는 엔티티
- * 세부 섹터(팹리스, 파운드리 등) 분류를 위해 subSector 필드를 포함합니다.
+ * 반도체 전문 플랫폼이므로 sector 필드는 '팹리스', '파운드리' 등 세부 공정 분류를 나타냅니다.
  */
 @Entity
 @Getter
 @Table(name = "stocks")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Stock {
+public class Stock extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,17 +31,41 @@ public class Stock {
     private String exchange;    // 거래소 코드 (예: NAS, NYS)
 
     @Column(nullable = false)
-    private String sector;      // 대분류 섹터 (예: 반도체)
+    private String sector;      // 세부 공정 섹터 (예: 팹리스, 파운드리, 소부장 등)
 
-    @Column(nullable = false)
-    private String subSector;   // 세부 공정 섹터 (예: 팹리스, 파운드리, 소부장 등)
+    @Column
+    private Double marketCap;   // 시가총액 (단위: 백만 달러)
+
+    @Column
+    private Double currentPrice; // 현재가
+
+    @Column
+    private Double rate;        // 등락률
 
     @Builder
-    public Stock(String ticker, String name, String exchange, String sector, String subSector) {
+    public Stock(String ticker, String name, String exchange, String sector, Double marketCap, Double currentPrice, Double rate) {
         this.ticker = ticker;
         this.name = name;
         this.exchange = exchange;
         this.sector = sector;
-        this.subSector = subSector;
+        this.marketCap = marketCap;
+        this.currentPrice = currentPrice;
+        this.rate = rate;
+    }
+
+    /**
+     * 실시간 주가 정보를 통합 업데이트합니다. (풍부한 도메인 모델 패턴)
+     */
+    public void updateRealtimeInfo(Double price, Double rate, Double marketCap) {
+        if (price != null) this.currentPrice = price;
+        if (rate != null) this.rate = rate;
+        if (marketCap != null) this.marketCap = marketCap;
+    }
+
+    /**
+     * 시가총액만 업데이트 (스케줄러 등에서 사용)
+     */
+    public void updateMarketCap(Double marketCap) {
+        this.marketCap = marketCap;
     }
 }
