@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.3.0",
+    "@tanstack/react-query": "^5.95.2",
+    "axios": "^1.13.6",
     "d3": "^7.9.0",
     "d3-voronoi-treemap": "^1.1.2",
     "lodash": "^4.17.23",
@@ -25,6 +28,8 @@
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/sockjs-client": "^1.5.4",
+    "@types/stompjs": "^2.3.10",
     "@typescript-eslint/eslint-plugin": "^8.57.1",
     "@typescript-eslint/parser": "^8.57.1",
     "@vitejs/plugin-react": "^6.0.1",

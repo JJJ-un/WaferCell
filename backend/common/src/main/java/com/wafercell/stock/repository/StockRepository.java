@@ -10,13 +10,8 @@ import java.util.List;
 public interface StockRepository extends JpaRepository<Stock, Long> {
 
     /**
-     * 특정 섹터(예: 반도체)에 속한 모든 종목을 조회합니다.
+     * 특정 세부 섹터(예: 팹리스, 파운드리 등)에 속한 모든 종목을 조회합니다.
      * 히트맵 데이터를 구성할 때 사용됩니다.
      */
     List<Stock> findBySector(String sector);
-
-    /**
-     * 특정 세부 섹터(예: 팹리스)에 속한 종목만 조회할 때 사용합니다.
-     */
-    List<Stock> findBySubSector(String subSector);
 }

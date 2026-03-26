@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class KoreaInvestProperties {
     private String key;
     private String secret;
-    private String url;
+    private String url;        // REST API 주소 (예: https://openapi.koreainvestment.com:9443)
+    private String wsUrl;      // WebSocket 주소 (예: https://ops.koreainvestment.com:9443)
     private int wsPort = 9443; // 기본값 9443
 }

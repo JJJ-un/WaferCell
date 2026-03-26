@@ -1,3 +1,5 @@
+
+
 // 전체, 섹터, 하위 종목
 
 // 인자 타입이 있을 것 같고, 데이터 자체 타입이 있을 것 같다. 
@@ -76,4 +78,15 @@ export interface SemiconductorMarket {
     averageChangePercent: number;
     sectors: Sector[]; 
     lastUpdated: Date;
+}
+
+// 왜 이런구조로 작성했는가? => 히트 맵 특성상 트리맵을 위해  => 구조를 손볼 필요은 있을슷
+export interface HeatmapNode {
+  // 전체 / 섹션 / 종목
+  name: string;
+  // 시가총액
+  value: number;
+  // 등락률 => 내가 백엔드에서 만든 값이다. 
+  rate: number;
+  children: HeatmapNode[] | null;
 }
