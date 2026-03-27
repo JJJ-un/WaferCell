@@ -11,10 +11,10 @@ interface DropdownRootProps extends Omit<ComponentProps<typeof DropdownWrapper>,
   onSelect?: (id: string | number) => void;
 }
 
-export default function DropdownRoot({ children, onSelect, ...props }: DropdownRootProps) {
+export default function DropdownRoot({ children, className, onSelect, ...props }: DropdownRootProps) {
   return (
     <DropdownContextProvider onSelect={onSelect}>
-      <DropdownWrapper {...props}>{children}</DropdownWrapper>
+      <DropdownWrapper className={className} {...props}>{children}</DropdownWrapper>
     </DropdownContextProvider>
   );
 }

@@ -14,7 +14,7 @@ function DropdownWrapper({ children, className, ...props }: ComponentPropsWithou
   })
 
   return (
-    <div ref={dropdownRef} {...props}>
+    <div className={className} ref={dropdownRef} {...props}>
       {children}
     </div>
   );

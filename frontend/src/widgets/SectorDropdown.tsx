@@ -18,8 +18,8 @@ export const SectorDropdown = ({ onSectorChange }: SectorDropdownProps) => {
     ];
 
     return (
-        <Dropdown onSelect={(id) => onSectorChange(id as SectorName)}>
-            <Dropdown.Trigger>
+        <Dropdown onSelect={(id) => onSectorChange(id as SectorName)} className="mb-[24px] gap-[8px]">
+            <Dropdown.Trigger className="bg-secondary w-[300px] h-[56px] rounded-[8px]">
                 <Dropdown.Value>
                     {({ selectedOption }) =>
                         // selectedOption은 Dropdown.Option의 children(label)을 그대로 물고 옵니다.
@@ -27,9 +27,9 @@ export const SectorDropdown = ({ onSectorChange }: SectorDropdownProps) => {
                     }
                 </Dropdown.Value>
             </Dropdown.Trigger>
-            <Dropdown.Menu>
+            <Dropdown.Menu className="fixed bg-tertiary w-[300px] rounded-[8px] z-100">
                 {sectors.map((sector) => (
-                    <Dropdown.Option key={sector.id} optionId={sector.id}>
+                    <Dropdown.Option key={sector.id} optionId={sector.id} className="p-[16px]">
                         {sector.label}
                     </Dropdown.Option>
                 ))}

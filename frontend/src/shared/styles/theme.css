@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-slate-200);
+    margin: 0;
+    font-family: sans-serif;
+    
+  }
+}
+
+@theme {
+  /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
+  --color-bg: #0B1326;
+
+   /* 사이드 바, 메뉴 바 등등*/
+  --color-primary: #131B2E;
+  --color-secondary: #222A3D;
+  --color-tertiary: #323a50;
+
+  /* 하락 구간 (Blue) */
+  --color-trend-down-900: #1e3a8a; /* -10% */
+  --color-trend-down-700: #1d4ed8; /* -5% */
+  --color-trend-down-500: #3b82f6; /* -2% */
+  --color-trend-down-300: #93c5fd; /* -0.5% */
+  --color-trend-down-100: #dbeafe; /* -0.01% */
+
+  /* 중립 (White) */
+  --color-trend-zero: #ffffff;      /* 0% */
+
+  /* 상승 구간 (Red) */
+  --color-trend-up-100: #fee2e2;   /* +0.01% */
+  --color-trend-up-300: #fca5a5;   /* +0.5% */
+  --color-trend-up-500: #f87171;   /* +2% */
+  --color-trend-up-700: #dc2626;   /* +5% */
+  --color-trend-up-900: #7f1d1d;   /* +10% */
+}

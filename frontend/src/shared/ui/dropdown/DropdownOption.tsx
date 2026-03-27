@@ -27,6 +27,7 @@ function DropdownOption({
   return (
     <div
       onClick={handleClick}
+      className={className}
       {...props}
     >
       {children}
