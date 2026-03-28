@@ -1,6 +1,6 @@
 package com.wafercell.stock.controller;
 
-import com.wafercell.stock.dto.HeatmapNode;
+import com.wafercell.stock.dto.StockHeatmapResponse;
 import com.wafercell.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,11 +18,10 @@ public class StockController {
     private final StockService stockService;
 
     /**
-     * 전체 반도체 히트맵 데이터를 반환합니다.
-     * (DB 및 메모리 캐시된 최신 데이터를 사용함)
+     * 전체 반도체 주식 데이터를 통합 구조(평면 리스트 + 요약 정보)로 반환합니다.
      */
     @GetMapping("/heatmap")
-    public HeatmapNode getHeatmap() {
-        return stockService.getTotalHeatmap();
+    public StockHeatmapResponse getHeatmap() {
+        return stockService.getFullHeatmapResponse();
     }
 }
