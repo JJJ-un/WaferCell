@@ -22,11 +22,10 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <StompProvider url={WEBSOCKET_URL}>
         <div className="flex flex-col bg-dashboard-bg text-ink-main">
-          <div className="h-20 bg-primary flex items-center py-4"> 상단 메뉴바</div>
+          <div className="h-20 bg-primary flex items-center py-4 top-0 sticky"> 상단 메뉴바</div>
           <div className="flex min-h-screen h-full">
-            <div className="w-[80px] bg-primary flex items-center h-screen px-6 justify-between sticky"> 사이드바</div>
             <DashBoard/>
-            <div className="w-[360px] bg-primary flex items-center h-screen px-6 justify-between sticky ml-auto"> 뉴스 및 상태</div>
+            <div className="w-[360px] bg-primary flex items-center h-screen px-6 justify-between ml-auto"> 뉴스 및 상태 사이드 바?</div>
           </div>
         </div>
       </StompProvider>

@@ -1,21 +1,22 @@
 import { useState} from 'react';
-import { type Stock } from '../shared/types/Semiconductor';
+import { type Stock } from '@/entities/stock/types/stock.types';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
-import { StockTooltip } from '@/entities/stock/ui/Stock';
-import { useColorScale } from '@/features/stock-filter/hooks/useColorScale';
-import { useVoronoiTreemap } from '@/features/stock-filter/useVoronoiTreemap';
+import { StockTooltip } from './StockTooltip';
+import { useColorScale } from '@/shared/model/hooks/useColorScale';
+import { useVoronoiTreemap } from '@/features/stock-heatmap/hooks/useVoronoiTreemap';
 
 interface StockProps {
     data: Stock[]; 
 }
 
 export const BasicVoronoi = ({ data }: StockProps) => {
-  const width = 960;
+  const width = 1060;
   const height = 500;
 
   const [hoveredStock, setHoveredStock] = useState<Stock | null>(null);
+  const [hoveredPosition, setHoveredPosition] = useState<{ x: number, y: number } | null>(null);  
   const colorScale = useColorScale();
   const polygons = useVoronoiTreemap(data, width, height);
 
@@ -35,8 +36,8 @@ export const BasicVoronoi = ({ data }: StockProps) => {
                 fill={colorScale(stock.changePercent)}
                 stroke="#eee"
                 strokeWidth="0.5"
-                onMouseEnter={() => setHoveredStock(stock)} 
-                onMouseLeave={() => setHoveredStock(null)}
+                onMouseEnter={() => {setHoveredStock(stock); setHoveredPosition({ x: centroid[0], y: centroid[1] });} } 
+                onMouseLeave={() => {setHoveredStock(null); setHoveredPosition(null);}}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text
@@ -57,7 +58,7 @@ export const BasicVoronoi = ({ data }: StockProps) => {
         })}
       </svg>
       {hoveredStock && (
-        <StockTooltip data={hoveredStock} />
+        <StockTooltip data={hoveredStock} x={hoveredPosition?.x} y={hoveredPosition?.y}   />
       )}
     </div>
   );

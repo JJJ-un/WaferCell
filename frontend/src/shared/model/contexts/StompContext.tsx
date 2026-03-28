@@ -8,13 +8,25 @@ interface StompContextProps {
 
 const StompContext = createContext<StompContextProps | null>(null);
 
+// 
 export const StompProvider = ({ url, children }: { url: string; children: React.ReactNode }) => {
     const [isConnected, setIsConnected] = useState(false);
     const clientRef = useRef<Client | null>(null);
 
     useEffect(() => {
+        // url이 정의되지 않았을 때의 에러 방지
+        if (!url) {
+          console.warn('⚠️ WebSocket URL is undefined. Waiting for configuration...');
+          return;
+        }
+
+        // Spring Boot withSockJS()를 사용할 때 네이티브 웹소켓 접속을 위해 /websocket 접미사 추가
+        const brokerURL = url.endsWith('/websocket') ? url : `${url}/websocket`;
+
+        console.log('📡 STOMP Connection Attempt:', brokerURL);
+
         const client = new Client({
-          brokerURL: url,
+          brokerURL: brokerURL,
           reconnectDelay: 5000,
           heartbeatIncoming: 4000,
           heartbeatOutgoing: 4000,
@@ -26,6 +38,12 @@ export const StompProvider = ({ url, children }: { url: string; children: React.
             console.log('🔌 STOMP Disconnected');
             setIsConnected(false);
           },
+          onStompError: (frame) => {
+            console.error('❌ STOMP Error:', frame.headers['message']);
+          },
+          onWebSocketError: (event) => {
+            console.error('❌ WebSocket Error:', event);
+          }
         });
 
         client.activate();
@@ -36,10 +54,12 @@ export const StompProvider = ({ url, children }: { url: string; children: React.
         };
       }, [url]);
 
-    // context에서 value로 넘겨주는 함수는 대게 useCallback TJdigksek. 여러군데에서 구독하기 때문에
     const subscribe = useCallback((topic: string, callback: (payload: any) => void) => {
-      if (!clientRef.current || !isConnected) return null;
+      if (!clientRef.current || !isConnected) {
+        return null;
+      }
 
+      console.log('📝 Subscribing to:', topic);
       return clientRef.current.subscribe(topic, (message: IMessage) => {
         try {
           const payload = JSON.parse(message.body);
@@ -48,9 +68,7 @@ export const StompProvider = ({ url, children }: { url: string; children: React.
           callback(message.body);
         }
       });
-    },
-    [isConnected]
-    )
+    }, [isConnected]);
 
     return (
       <StompContext.Provider value={{ isConnected, subscribe }}>
