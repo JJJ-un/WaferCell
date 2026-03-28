@@ -7,6 +7,7 @@ import lombok.Getter;
  * 실시간 주가 업데이트 정보를 담는 DTO
  */
 @Getter
+@Setter
 @Builder
 public class StockUpdate {
     private String ticker;
@@ -21,4 +22,5 @@ public class StockUpdate {
     private String tradingValue;    // 거래대금
     private String strength;        // 체결강도
     private String volumeIntensity; // 거래강도
+    private String rsi;             // RSI 지표
 }

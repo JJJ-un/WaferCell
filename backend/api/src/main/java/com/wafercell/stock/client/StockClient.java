@@ -40,6 +40,25 @@ public class StockClient {
         return fetch(uri, "HHDFS76200200", accessToken);
     }
 
+    /**
+     * [해외주식] 기간별 시세 조회 (RSI 계산 등을 위한 과거 종가 데이터)
+     */
+    public Map<String, Object> getDailyPrice(String exchangeCode, String ticker) {
+        String accessToken = authClient.getAccessToken();
+
+        String uri = UriComponentsBuilder.fromHttpUrl(properties.getUrl())
+                .path("/uapi/overseas-price/v1/quotations/dailyprice")
+                .queryParam("AUTH", "")
+                .queryParam("EXCD", exchangeCode)
+                .queryParam("SYMB", ticker)
+                .queryParam("GUBN", "0") // 0: 일봉
+                .queryParam("BYMD", "")  // 공란 시 오늘 기준
+                .queryParam("MODP", "1") // 수정주가 반영
+                .toUriString();
+
+        return fetch(uri, "HHDFS76240000", accessToken);
+    }
+
     private Map<String, Object> fetch(String uri, String trId, String token) {
         try {
             @SuppressWarnings("unchecked")

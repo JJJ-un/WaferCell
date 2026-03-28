@@ -53,4 +53,7 @@ public class StockDetailDto {
 
     /** SOXX 대비 상대 변동률 (stock.changePercent - soxx.changePercent) */
     private Double relativeChange;
+
+    /** RSI (Relative Strength Index) - 14일 기준 */
+    private Double rsi;
 }

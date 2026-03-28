@@ -24,6 +24,7 @@ export type SectorName =
     tradingValue?: number;   // 거래대금
     strength?: number;       // 체결강도
     relativeChange?: number; // SOXX 대비 상대 변동률
+    rsi?: number;            // RSI 지표
    }
   
    export interface StockSummary {

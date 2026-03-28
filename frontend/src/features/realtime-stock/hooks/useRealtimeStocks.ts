@@ -13,6 +13,7 @@ interface StockUpdate {
   timestamp: string;
   tradingValue?: string;
   strength?: string;
+  rsi?: string;
 }
 
 const transformUpdate = (data: StockUpdate): Partial<Stock> => ({
@@ -23,11 +24,11 @@ const transformUpdate = (data: StockUpdate): Partial<Stock> => ({
   lowPrice: parseFloat(data.lowPrice),
   tradingValue: data.tradingValue ? parseFloat(data.tradingValue) : undefined,
   strength: data.strength ? parseFloat(data.strength) : undefined,
+  rsi: data.rsi ? parseFloat(data.rsi) : undefined,
 });
 
 /**
- * 실시간 주가 업데이트를 수신하고, 전체 시장 지수 및 섹터 지수, 
- * 그리고 SOXX 대비 상대 지표를 실시간으로 재계산하여 캐시를 갱신하는 훅
+ * 실시간 주가 및 보조지표(RSI, SOXX 상대수익률) 동기화 훅
  */
 export const useRealtimeStocks = () => {
   const { isConnected, subscribe } = useStomp();
@@ -37,7 +38,7 @@ export const useRealtimeStocks = () => {
     queryClient.setQueryData(['stocks', 'heatmap'], (prev: StockHeatmap | undefined) => {
       if (!prev || !prev.stocks) return prev;
 
-      // 1. 해당 종목 데이터 업데이트 (참조값 변경을 위해 배열 복사)
+      // 1. 개별 종목 데이터 업데이트 (참조값 변경)
       const targetIndex = prev.stocks.findIndex(s => s.ticker === stockUpdate.ticker);
       if (targetIndex === -1) return prev;
 
@@ -47,7 +48,7 @@ export const useRealtimeStocks = () => {
         ...transformUpdate(stockUpdate),
       };
 
-      // 2. 실시간 SOXX 등락률 기반 상대 지표(Relative Change) 계산
+      // 2. 실시간 SOXX 대비 지표 재계산
       const soxxStock = baseStocks.find(s => s.ticker === 'SOXX');
       const soxxRate = soxxStock ? soxxStock.changePercent : 0;
 
@@ -56,7 +57,7 @@ export const useRealtimeStocks = () => {
         relativeChange: s.changePercent - soxxRate,
       }));
 
-      // 3. 섹터 요약 정보 실시간 재계산 (가중 평균)
+      // 3. 섹터 요약 재계산
       const updatedSectors = prev.sectors.map(sector => {
         const sectorStocks = finalStocks.filter(s => s.sector === sector.name);
         if (sectorStocks.length === 0) return { ...sector };
@@ -74,13 +75,12 @@ export const useRealtimeStocks = () => {
         };
       });
 
-      // 4. 전체 요약 정보(반도체 지수) 실시간 재계산
+      // 4. 전체 요약 재계산
       const totalMarketCap = updatedSectors.reduce((sum, s) => sum + s.marketCap, 0);
       const totalVolume = updatedSectors.reduce((sum, s) => sum + s.volume, 0);
       const overallAvgRate = totalMarketCap === 0 ? 0 :
         updatedSectors.reduce((sum, s) => sum + (s.changePercent * (s.marketCap / totalMarketCap)), 0);
 
-      // 5. 전체 캐시 객체 참조 변경 (불변성 유지 -> 리렌더링 유발)
       return {
         ...prev,
         overall: {
