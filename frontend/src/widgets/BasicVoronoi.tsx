@@ -1,22 +1,21 @@
 import { useState} from 'react';
-import { type Stock } from '@/entities/stock/types/stock.types';
+import { type Stock } from '../shared/types/Semiconductor';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
-import { StockTooltip } from './StockTooltip';
-import { useColorScale } from '@/shared/model/hooks/useColorScale';
-import { useVoronoiTreemap } from '@/features/stock-heatmap/hooks/useVoronoiTreemap';
+import { StockTooltip } from '@/entities/stock/ui/Stock';
+import { useColorScale } from '@/features/stock-filter/hooks/useColorScale';
+import { useVoronoiTreemap } from '@/features/stock-filter/useVoronoiTreemap';
 
 interface StockProps {
     data: Stock[]; 
 }
 
 export const BasicVoronoi = ({ data }: StockProps) => {
-  const width = 1060;
+  const width = 960;
   const height = 500;
 
   const [hoveredStock, setHoveredStock] = useState<Stock | null>(null);
-  const [hoveredPosition, setHoveredPosition] = useState<{ x: number, y: number } | null>(null);  
   const colorScale = useColorScale();
   const polygons = useVoronoiTreemap(data, width, height);
 
@@ -36,8 +35,8 @@ export const BasicVoronoi = ({ data }: StockProps) => {
                 fill={colorScale(stock.changePercent)}
                 stroke="#eee"
                 strokeWidth="0.5"
-                onMouseEnter={() => {setHoveredStock(stock); setHoveredPosition({ x: centroid[0], y: centroid[1] });} } 
-                onMouseLeave={() => {setHoveredStock(null); setHoveredPosition(null);}}
+                onMouseEnter={() => setHoveredStock(stock)} 
+                onMouseLeave={() => setHoveredStock(null)}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text
@@ -58,7 +57,7 @@ export const BasicVoronoi = ({ data }: StockProps) => {
         })}
       </svg>
       {hoveredStock && (
-        <StockTooltip data={hoveredStock} x={hoveredPosition?.x} y={hoveredPosition?.y}   />
+        <StockTooltip data={hoveredStock} />
       )}
     </div>
   );

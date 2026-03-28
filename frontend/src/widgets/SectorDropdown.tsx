@@ -1,5 +1,5 @@
 import { Dropdown } from "@/shared/ui/dropdown/Dropdown"
-import { type SectorName } from "@/entities/stock/types/stock.types";
+import { type SectorName } from "@/shared/types/Semiconductor";
 
 export interface SectorDropdownProps {
     onSectorChange: (sector: SectorName) => void;
@@ -18,7 +18,7 @@ export const SectorDropdown = ({ onSectorChange }: SectorDropdownProps) => {
     ];
 
     return (
-        <Dropdown onSelect={(id) => onSectorChange(id as SectorName)} className="gap-[8px]">
+        <Dropdown onSelect={(id) => onSectorChange(id as SectorName)} className="mb-[24px] gap-[8px]">
             <Dropdown.Trigger className="bg-secondary w-[300px] h-[56px] rounded-[8px]">
                 <Dropdown.Value>
                     {({ selectedOption }) =>

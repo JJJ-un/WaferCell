@@ -1,34 +1,37 @@
 import { useMemo } from 'react';
-import { type Stock } from '@/entities/stock/types/stock.types';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
 
 // 계층 구조 데이터 타입 정의
-type HeatmapNode = { name: string; children: Stock[] } | Stock;
-
+interface HierarchyDataType {
+  ticker?: string;
+  value?: number;
+  children?: HierarchyDataType[];
+}
 
 /**
  * 데이터를 바탕으로 보로노이 트리맵 다각형 좌표를 계산하는 훅
  */
-export const useVoronoiTreemap = (stocks: Stock[], width: number, height: number) => {
+export const useVoronoiTreemap = (data: any[], width: number, height: number) => {
   
+  // 1. 데이터 내용의 변화를 감지하기 위한 "지문(Fingerprint)" 생성
+  // 데이터의 순서나 값이 바뀌었을 때만 root를 재계산하도록 합니다.
+  const layoutDependency = useMemo(() => {
+    return data.map(s => `${s.ticker}-${s.value}`).join('|');
+  }, [data]);
 
   // 2. D3 계층 구조(Hierarchy) 생성
   const root = useMemo(() => {
-    if (!stocks || stocks.length === 0) return null;
+    if (!data || data.length === 0) return null;
 
-    const hierarchyData: HeatmapNode = { name: "root", children: stocks };
-
-    return d3.hierarchy<HeatmapNode>(hierarchyData)
-          .sum((d) => {
-            return 'marketCap' in d ? d.marketCap : 0;
-          });
-  }, [stocks]); 
+    return d3.hierarchy<HierarchyDataType>({ children: data })
+      .sum(d => d.value ?? 0);
+  }, [layoutDependency]);
 
   // 3. 보로노이 트리맵 알고리즘 실행 및 다각형(Polygons) 반환
   const polygons = useMemo(() => {
-    if (!root || width === 0 || height === 0) return [];
+    if (!root || !data || data.length === 0) return [];
 
     try {
       // 보로노이 트리맵 레이아웃 설정
