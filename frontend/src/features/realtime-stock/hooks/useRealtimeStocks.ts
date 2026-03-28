@@ -13,7 +13,6 @@ interface StockUpdate {
   timestamp: string;
   tradingValue?: string;
   strength?: string;
-  volumeIntensity?: string;
 }
 
 const transformUpdate = (data: StockUpdate): Partial<Stock> => ({
@@ -22,33 +21,44 @@ const transformUpdate = (data: StockUpdate): Partial<Stock> => ({
   volume: parseInt(data.volume, 10),
   highPrice: parseFloat(data.highPrice),
   lowPrice: parseFloat(data.lowPrice),
+  tradingValue: data.tradingValue ? parseFloat(data.tradingValue) : undefined,
+  strength: data.strength ? parseFloat(data.strength) : undefined,
 });
 
+/**
+ * 실시간 주가 업데이트를 수신하고, 전체 시장 지수 및 섹터 지수, 
+ * 그리고 SOXX 대비 상대 지표를 실시간으로 재계산하여 캐시를 갱신하는 훅
+ */
 export const useRealtimeStocks = () => {
   const { isConnected, subscribe } = useStomp();
   const queryClient = useQueryClient();
 
   const handleUpdate = useCallback((stockUpdate: StockUpdate) => {
-    // ['stocks', 'heatmap'] 키에 대한 캐시를 갱신합니다.
     queryClient.setQueryData(['stocks', 'heatmap'], (prev: StockHeatmap | undefined) => {
       if (!prev || !prev.stocks) return prev;
 
-      // 1. 종목 배열에서 해당 종목 인덱스 찾기
+      // 1. 해당 종목 데이터 업데이트 (참조값 변경을 위해 배열 복사)
       const targetIndex = prev.stocks.findIndex(s => s.ticker === stockUpdate.ticker);
       if (targetIndex === -1) return prev;
 
-      // 2. 종목 리스트를 '완전히 새로운 배열'로 생성
-      const updatedStocks = [...prev.stocks];
-      
-      // 3. 해당 종목도 '완전히 새로운 객체'로 업데이트 (불변성 유지)
-      updatedStocks[targetIndex] = {
-        ...updatedStocks[targetIndex],
+      const baseStocks = [...prev.stocks];
+      baseStocks[targetIndex] = {
+        ...baseStocks[targetIndex],
         ...transformUpdate(stockUpdate),
       };
 
-      // 4. 섹터 요약 정보 재계산 (모든 섹터 객체도 새로 생성)
+      // 2. 실시간 SOXX 등락률 기반 상대 지표(Relative Change) 계산
+      const soxxStock = baseStocks.find(s => s.ticker === 'SOXX');
+      const soxxRate = soxxStock ? soxxStock.changePercent : 0;
+
+      const finalStocks = baseStocks.map(s => ({
+        ...s,
+        relativeChange: s.changePercent - soxxRate,
+      }));
+
+      // 3. 섹터 요약 정보 실시간 재계산 (가중 평균)
       const updatedSectors = prev.sectors.map(sector => {
-        const sectorStocks = updatedStocks.filter(s => s.sector === sector.name);
+        const sectorStocks = finalStocks.filter(s => s.sector === sector.name);
         if (sectorStocks.length === 0) return { ...sector };
 
         const totalMarketCap = sectorStocks.reduce((sum, s) => sum + s.marketCap, 0);
@@ -64,14 +74,13 @@ export const useRealtimeStocks = () => {
         };
       });
 
-      // 5. 전체 요약 정보 재계산
+      // 4. 전체 요약 정보(반도체 지수) 실시간 재계산
       const totalMarketCap = updatedSectors.reduce((sum, s) => sum + s.marketCap, 0);
       const totalVolume = updatedSectors.reduce((sum, s) => sum + s.volume, 0);
       const overallAvgRate = totalMarketCap === 0 ? 0 :
         updatedSectors.reduce((sum, s) => sum + (s.changePercent * (s.marketCap / totalMarketCap)), 0);
 
-      // 6. 전체 응답 객체(StockHeatmap)를 '완전히 새로운 참조'로 반환
-      // 이 작업을 통해 리액트 쿼리가 상태 변화를 감지하고 UI를 리렌더링하게 됩니다.
+      // 5. 전체 캐시 객체 참조 변경 (불변성 유지 -> 리렌더링 유발)
       return {
         ...prev,
         overall: {
@@ -81,7 +90,7 @@ export const useRealtimeStocks = () => {
           volume: totalVolume,
         },
         sectors: updatedSectors,
-        stocks: updatedStocks,
+        stocks: finalStocks,
       };
     });
   }, [queryClient]);
@@ -89,10 +98,8 @@ export const useRealtimeStocks = () => {
   useEffect(() => {
     if (!isConnected || !subscribe) return;
 
-    // 백엔드의 /topic/stocks 채널 구독 시작
     const subscription = subscribe('/topic/stocks', handleUpdate);
 
-    // 컴포넌트 언마운트 시 구독 해제
     return () => {
       subscription?.unsubscribe();
     };

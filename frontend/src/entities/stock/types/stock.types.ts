@@ -1,7 +1,5 @@
 // 전체, 섹터, 하위 종목
 
-// 인자 타입이 있을 것 같고, 데이터 자체 타입이 있을 것 같다. 
-
 export type SectorName = 
   | '전체'
   | '팹리스' 
@@ -22,6 +20,10 @@ export type SectorName =
     lowPrice: number;
     prevClose: number;
     volume: number;
+    // --- 추가 실시간 지표 ---
+    tradingValue?: number;   // 거래대금
+    strength?: number;       // 체결강도
+    relativeChange?: number; // SOXX 대비 상대 변동률
    }
   
    export interface StockSummary {

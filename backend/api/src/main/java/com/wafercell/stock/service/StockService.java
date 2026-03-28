@@ -98,12 +98,18 @@ public class StockService {
                 double newHigh = Double.parseDouble(update.getHighPrice());
                 double newLow = Double.parseDouble(update.getLowPrice());
                 
-                // 기존 데이터 필드 유지하며 가격/등락률/거래량/고가/저가 업데이트
+                // 추가 지표 파싱 (안전한 파싱)
+                double newTradingValue = update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0;
+                double newStrength = update.getStrength() != null ? Double.parseDouble(update.getStrength()) : 0.0;
+
+                // 기존 데이터 필드 유지하며 가격/등락률/거래량/고가/저가/추가 지표 업데이트
                 existing.setPrice(newPrice);
                 existing.setChangePercent(newRate);
                 existing.setVolume(newVolume);
                 existing.setHighPrice(newHigh);
                 existing.setLowPrice(newLow);
+                existing.setTradingValue(newTradingValue);
+                existing.setStrength(newStrength);
                 
                 stockCache.put(ticker, existing);
             } catch (Exception e) {
@@ -118,6 +124,16 @@ public class StockService {
      */
     public StockHeatmapResponse getFullHeatmapResponse() {
         List<StockDetailDto> allStocks = getAllStocks();
+
+        // SOXX 종목 데이터 찾기 (비교용)
+        double soxxRate = allStocks.stream()
+                .filter(s -> "SOXX".equals(s.getTicker()))
+                .mapToDouble(StockDetailDto::getChangePercent)
+                .findFirst()
+                .orElse(0.0);
+
+        // 모든 종목에 SOXX 대비 상대 변동률 계산
+        allStocks.forEach(s -> s.setRelativeChange(s.getChangePercent() - soxxRate));
 
         // 1. 섹터별 요약 정보 계산
         Map<String, List<StockDetailDto>> groupedBySector = allStocks.stream()

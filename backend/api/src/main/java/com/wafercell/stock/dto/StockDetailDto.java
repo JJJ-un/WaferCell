@@ -43,4 +43,14 @@ public class StockDetailDto {
 
     /** 거래량 */
     private Long volume;
+
+    // --- 추가 실시간 지표 ---
+    /** 거래대금 */
+    private Double tradingValue;
+
+    /** 체결강도 */
+    private Double strength;
+
+    /** SOXX 대비 상대 변동률 (stock.changePercent - soxx.changePercent) */
+    private Double relativeChange;
 }
