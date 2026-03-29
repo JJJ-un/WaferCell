@@ -21,10 +21,12 @@ export type SectorName =
     prevClose: number;
     volume: number;
     // --- 추가 실시간 지표 ---
-    tradingValue?: number;   // 거래대금
-    strength?: number;       // 체결강도
-    relativeChange?: number; // SOXX 대비 상대 변동률
-    rsi?: number;            // RSI 지표
+    tradingValue?: number;       // 현재 누적 거래대금
+    strength?: number;           // 체결강도
+    relativeChange?: number;     // SOXX 대비 상대 변동률
+    rsi?: number;                // RSI 지표
+    averageTradingValue?: number; // 20일 평균 일일 거래대금
+    tradingValueRatio?: number;   // 평소 대비 거래대금 비율 (%)
    }
   
    export interface StockSummary {

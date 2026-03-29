@@ -56,4 +56,10 @@ public class StockDetailDto {
 
     /** RSI (Relative Strength Index) - 14일 기준 */
     private Double rsi;
+
+    /** 최근 20일 평균 일일 거래대금 */
+    private Double averageTradingValue;
+
+    /** 평소 거래대금 대비 현재 비율 (현재 / 20일 평균 * 100) */
+    private Double tradingValueRatio;
 }

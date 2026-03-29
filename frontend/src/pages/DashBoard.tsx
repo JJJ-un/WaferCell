@@ -4,7 +4,9 @@ import { useState, useMemo } from "react";
 import { type SectorName } from "@/entities/stock/types/stock.types";
 import { useRealtimeStocks } from "@/features/realtime-stock/hooks/useRealtimeStocks";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import Card from "@/shared/ui/card/Card";
+import { TradeStrengthIndicator } from "@/widgets/TradeStrengthIndicator";
+import { TradingValueIndicator } from "@/widgets/TradingValueIndicator";
+import { RsiIndicator } from "@/widgets/RsiIndicator";
 
 export const DashBoard = () => {
     const { data: heatmapData} = useHeatmapQuery();
@@ -27,7 +29,11 @@ export const DashBoard = () => {
         <div className="p-[24px] flex flex-col gap-[24px]">
             <SectorDropdown onSectorChange={setSelectedSector}/>
             <BasicVoronoi data={filteredData}/>
-            <Card className="w-[260px] h-[170px]">나 카드여</Card>
+            <div className="flex gap-6">
+                <TradeStrengthIndicator/>
+                <TradingValueIndicator/>
+                <RsiIndicator/>
+            </div>
         </div>
     )
 }
