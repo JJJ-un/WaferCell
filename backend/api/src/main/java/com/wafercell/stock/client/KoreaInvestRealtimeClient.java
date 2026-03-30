@@ -172,32 +172,32 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
             String dataPart = pipeParts[3];
             String[] subParts = dataPart.split("\\^");
 
-            if (subParts.length > 22) {
-                String rawSymbol = subParts[0]; 
-                String price = subParts[11];    
-                String rate = subParts[14];     
-                String ticker = rawSymbol.length() > 4 ? rawSymbol.substring(4) : rawSymbol;
-
-                // 추가 지표 추출
-                String tradingValue = subParts[21]; // TAMT (거래대금)
-                String strength = subParts[22];     // STRN (체결강도)
+            if (subParts.length > 24) {
+                String ticker = subParts[1];      // 종목코드 (SYMB)
+                String timestamp = subParts[5];   // 현지시간 (XHMS)
+                String highPrice = subParts[9];   // 고가 (HIGH)
+                String lowPrice = subParts[10];   // 저가 (LOW)
+                String price = subParts[11];      // 현재가 (LAST)
+                String rate = subParts[14];       // 등락률 (RATE)
+                String volume = subParts[20];     // 누적 거래량 (TVOL)
                 
-                // 거래강도 계산 (현재누적거래량 / 전일거래량 * 100)
-                double currentVol = Double.parseDouble(subParts[19]);
-                double prevVol = Double.parseDouble(subParts[1]);
-                double intensity = (prevVol == 0) ? 0 : (currentVol / prevVol) * 100;
-
-                log.info("⚡ [실시간] {}: {} ({}%) | 체결강도:{}% | 거래대금:{}", ticker, price, rate, strength, tradingValue);
+                // 추가 지표 파싱
+                String tradingValue = subParts[21]; // TAMT (거래대금)
+                String strength = subParts[24];     // STRN (체결강도)
+                
+                log.info("⚡ [실시간] {}: {} ({}%) | 고가:{} | 저가:{} | 거래량:{} | 체결강도:{}", 
+                        ticker, price, rate, highPrice, lowPrice, volume, strength);
 
                 StockUpdate update = StockUpdate.builder()
                         .ticker(ticker)
                         .price(price)
+                        .highPrice(highPrice)
+                        .lowPrice(lowPrice)
                         .rate(rate)
-                        .volume(subParts[19]) 
-                        .timestamp(subParts[5])
+                        .volume(volume) 
+                        .timestamp(timestamp)
                         .tradingValue(tradingValue)
                         .strength(strength)
-                        .volumeIntensity(String.format("%.2f", intensity))
                         .build();
 
                 stockService.updateStockCache(update);

@@ -1,46 +1,24 @@
 "use client"
 
-import { createContext, type PropsWithChildren, type ReactNode } from "react";
-import { useDropdown } from "@/shared/model/hooks/useDropdown";
+import { createContext, useState, type PropsWithChildren } from "react";
 
 export type DropdownContextType = {
   isBoxOpen: boolean;
   toggleBoxOpen: () => void;
   closeBox: () => void;
-  selectedId: string | number | null;
-  selectedOption: ReactNode | null;
-  selectOption: (id: string | number | null, option: ReactNode) => void; 
 };
 
 export const DropdownContext = createContext<DropdownContextType>({
   isBoxOpen: false,
   toggleBoxOpen: () => {},
   closeBox: () => {},
-  selectedId: null,
-  selectedOption: null,
-  selectOption: () => {},
 });
 
-interface DropdownContextProviderProps extends PropsWithChildren {
-  onSelect?: (id: string | number) => void;
-}
+function DropdownContextProvider({ children }: PropsWithChildren) {
+  const [isBoxOpen, setIsBoxOpen] = useState(false);
 
-function DropdownContextProvider({ children, onSelect }: DropdownContextProviderProps) {
-  const {
-    selectedOption,
-    selectedId,
-    selectOption: baseSelectOption,
-    isBoxOpen,
-    toggleBoxOpen,
-    closeBox,
-  } = useDropdown<string | number | null>();
-
-  const selectOption = (id: string | number | null, option: ReactNode) => {
-    baseSelectOption(id, option);
-    if (id !== null) {
-      onSelect?.(id);
-    }
-  };
+  const toggleBoxOpen = () => setIsBoxOpen(prev => !prev);
+  const closeBox = () => setIsBoxOpen(false);
 
   return (
     <DropdownContext.Provider
@@ -48,15 +26,11 @@ function DropdownContextProvider({ children, onSelect }: DropdownContextProvider
         isBoxOpen,
         toggleBoxOpen,
         closeBox,
-        selectedOption,
-        selectedId,
-        selectOption,
       }}
     >
       {children}
     </DropdownContext.Provider>
   );
 }
-
 
 export { DropdownContextProvider }
