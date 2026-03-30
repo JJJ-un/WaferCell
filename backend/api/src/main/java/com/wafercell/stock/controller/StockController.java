@@ -32,21 +32,10 @@ public class StockController {
     }
 
     /**
-     * 최신 해외 주식 속보 목록을 반환합니다.
+     * 최신 해외 주식 속보 목록을 반환합니다. (무한 스크롤 지원)
      */
     @GetMapping("/news")
-    public List<StockNewsDto> getNews() {
-        return stockService.getLatestNews();
-    }
-
-    /**
-     * 특정 뉴스의 전체 본문 내용을 반환합니다.
-     */
-    @GetMapping("/news/detail")
-    public Map<String, String> getNewsDetail(@RequestParam String entpCode, @RequestParam String srno) {
-        String content = stockService.getNewsContent(entpCode, srno);
-        Map<String, String> response = new HashMap<>();
-        response.put("content", content);
-        return response;
+    public List<StockNewsDto> getNews(@RequestParam(required = false) String lastSrno) {
+        return stockService.getLatestNews(lastSrno);
     }
 }

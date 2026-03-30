@@ -1,26 +1,29 @@
 'use client' 
 
-import { type ComponentPropsWithoutRef} from "react";
-import { useContext } from "react";
+import { type ComponentPropsWithoutRef, useContext } from "react";
 import { DropdownContext } from "@/shared/model/contexts/DropdownContextProvider";
 
 interface DropdownOptionProps extends ComponentPropsWithoutRef<'div'> {
-  // 필수 사용
   optionId: string | number | null;
+  onSelect?: (id: string | number | null) => void; // 클릭 시 부모에게 알림
 }
 
 function DropdownOption({
   optionId,
   onClick,
+  onSelect,
   className,
   children,
   ...props
 }: DropdownOptionProps) {
-  const { selectOption, toggleBoxOpen } = useContext(DropdownContext);
+  const { toggleBoxOpen } = useContext(DropdownContext);
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    selectOption(optionId, children);
+    // 1. 부모에게 선택된 ID 전달
+    onSelect?.(optionId);
+    // 2. 드롭다운 닫기 (UI 변화)
     toggleBoxOpen();
+    // 3. 기존 onClick 실행
     onClick?.(e);
   };
 

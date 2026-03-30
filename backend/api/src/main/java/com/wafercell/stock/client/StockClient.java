@@ -60,9 +60,9 @@ public class StockClient {
     }
 
     /**
-     * [해외주식] 해외속보(제목) 조회
+     * [해외주식] 해외속보(제목) 조회 (무한 스크롤 지원)
      */
-    public Map<String, Object> getOverseasBreakingNews() {
+    public Map<String, Object> getOverseasBreakingNews(String lastSrno) {
         String accessToken = authClient.getAccessToken();
 
         String uri = UriComponentsBuilder.fromHttpUrl(properties.getUrl())
@@ -74,27 +74,11 @@ public class StockClient {
                 .queryParam("FID_INPUT_DATE_1", "")
                 .queryParam("FID_INPUT_HOUR_1", "")
                 .queryParam("FID_RANK_SORT_CLS_CODE", "")
-                .queryParam("FID_INPUT_SRNO", "")
+                .queryParam("FID_INPUT_SRNO", lastSrno != null ? lastSrno : "") // 마지막 일련번호 전달
                 .queryParam("FID_COND_SCR_DIV_CODE", "11801")
                 .toUriString();
 
         return fetch(uri, "FHKST01011801", accessToken);
-    }
-
-    /**
-     * [해외주식] 해외속보(내용) 조회
-     */
-    public Map<String, Object> getNewsContent(String entpCode, String srno) {
-        String accessToken = authClient.getAccessToken();
-
-        String uri = UriComponentsBuilder.fromHttpUrl(properties.getUrl())
-                .path("/uapi/overseas-price/v1/quotations/news-content")
-                .queryParam("FID_NEWS_OFER_ENTP_CODE", entpCode)
-                .queryParam("FID_INPUT_SRNO", srno)
-                .queryParam("FID_COND_SCR_DIV_CODE", "11802")
-                .toUriString();
-
-        return fetch(uri, "FHKST01011802", accessToken);
     }
 
     private Map<String, Object> fetch(String uri, String trId, String token) {

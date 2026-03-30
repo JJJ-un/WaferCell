@@ -2,6 +2,7 @@ package com.wafercell.stock.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 실시간 주가 업데이트 정보를 담는 DTO

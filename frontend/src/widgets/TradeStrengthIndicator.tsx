@@ -1,13 +1,14 @@
 import Card from "@/shared/ui/card/Card";
 
+// 무조건 들어와야하는거 아닌가?
 interface TradeStrengthIndicatorProps {
-  strength?: number;
+  strength: number;
 }
 
 const STRENGTH_BASE = 100;
 const MAX_OFFSET = 50; 
 
-export const TradeStrengthIndicator = ({ strength = 70 }: TradeStrengthIndicatorProps) => {
+export const TradeStrengthIndicator = ({ strength }: TradeStrengthIndicatorProps) => {
   // 50% ~ 150% 범위를 0 ~ 100% 비율로 변환
   const bullishRatio = Math.min(Math.max(((strength - (STRENGTH_BASE - MAX_OFFSET)) / (MAX_OFFSET * 2)) * 100, 0), 100);
   

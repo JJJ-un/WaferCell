@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -201,11 +202,11 @@ public class StockService {
     }
 
     /**
-     * 최신 해외 속보 목록을 가져옵니다.
+     * 최신 해외 속보 목록을 가져와서 우리 반도체 종목과 연관된 뉴스만 필터링합니다.
      */
-    public List<StockNewsDto> getLatestNews() {
+    public List<StockNewsDto> getLatestNews(String lastSrno) {
         try {
-            Map<String, Object> response = stockClient.getOverseasBreakingNews();
+            Map<String, Object> response = stockClient.getOverseasBreakingNews(lastSrno);
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> output = (List<Map<String, Object>>) response.get("output");
 
@@ -229,31 +230,11 @@ public class StockService {
                         .source(item.get("dorg").toString())
                         .tickers(tickers)
                         .build();
-            }).collect(Collectors.toList());
+            })
+            .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("뉴스 조회 실패: {}", e.getMessage());
             return new ArrayList<>();
-        }
-    }
-
-    /**
-     * 특정 뉴스의 전체 본문 내용을 가져와서 합쳐줍니다.
-     */
-    public String getNewsContent(String entpCode, String srno) {
-        try {
-            Map<String, Object> response = stockClient.getNewsContent(entpCode, srno);
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> output = (List<Map<String, Object>>) response.get("output");
-
-            if (output == null || output.isEmpty()) return "뉴스 내용을 불러올 수 없습니다.";
-
-            // 여러 레코드로 나뉘어 오는 본문을 하나로 합침 (필드명: cntt)
-            return output.stream()
-                    .map(item -> item.get("cntt").toString())
-                    .collect(Collectors.joining("\n"));
-        } catch (Exception e) {
-            log.error("뉴스 본문 조회 실패: {}", e.getMessage());
-            return "뉴스 본문을 가져오는 중에 오류가 발생했습니다.";
         }
     }
 

@@ -35,6 +35,7 @@ export const useRealtimeStocks = () => {
   const queryClient = useQueryClient();
 
   const handleUpdate = useCallback((stockUpdate: StockUpdate) => {
+    // 해당 키의 데이터를 건드린다. 값이 계속 바뀌겠지?? 
     queryClient.setQueryData(['stocks', 'heatmap'], (prev: StockHeatmap | undefined) => {
       if (!prev || !prev.stocks) return prev;
 

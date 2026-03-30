@@ -41,3 +41,18 @@ export type SectorName =
      sectors: StockSummary[];
      stocks: Stock[];
    }
+
+   // --- 뉴스 관련 타입 ---
+   export interface StockNews {
+     id: string;               // cntt_usiq_srno
+     newsOferEntpCode: string; // 상세 조회용 업체 코드
+     date: string;             // YYYYMMDD
+     time: string;             // HHMMSS
+     title: string;
+     source: string;           // 자료원
+     tickers: string[];        // 연관 종목 리스트
+   }
+
+   export interface NewsDetailResponse {
+     content: string;          // 기사 본문
+   }

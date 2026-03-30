@@ -1,39 +1,41 @@
-import { Dropdown } from "@/shared/ui/dropdown/Dropdown"
+import { Dropdown } from "@/shared/ui/dropdown/Dropdown";
+import { useStockStore } from "@/entities/stock/model/useStockStore";
 import { type SectorName } from "@/entities/stock/types/stock.types";
 
-export interface SectorDropdownProps {
-    onSectorChange: (sector: SectorName) => void;
-}
+const SECTORS: SectorName[] = [
+  '전체', '팹리스', '파운드리', '소부장', '메모리', 'IDM', 'IP'
+];
 
-export const SectorDropdown = ({ onSectorChange }: SectorDropdownProps) => {
-    // 실제 반도체 섹터 리스트
-    const sectors: { id: SectorName; label: string }[] = [
-        { id: '전체', label: '전체 보기' },
-        { id: '팹리스', label: '팹리스 (Fabless)' },
-        { id: '파운드리', label: '파운드리 (Foundry)' },
-        { id: '소부장', label: '소부장 (Equip/Mat)' },
-        { id: '메모리', label: '메모리 (Memory)' },
-        { id: 'IDM', label: '종합 반도체 (IDM)' },
-        { id: 'IP', label: '설계 자산 (IP)' },
-    ];
+export const SectorDropdown = () => {
+  // Zustand에서 상태와 액션을 직접 가져옵니다.
+  const selectedSector = useStockStore(state => state.selectedSectorId);
+  const setSelectedSector = useStockStore(state => state.setSelectedSector);
 
-    return (
-        <Dropdown onSelect={(id) => onSectorChange(id as SectorName)} className="gap-[8px]">
-            <Dropdown.Trigger className="bg-secondary w-[300px] h-[56px] rounded-[8px]">
-                <Dropdown.Value>
-                    {({ selectedOption }) =>
-                        // selectedOption은 Dropdown.Option의 children(label)을 그대로 물고 옵니다.
-                        selectedOption ? selectedOption : "섹터를 선택하세요"
-                    }
-                </Dropdown.Value>
-            </Dropdown.Trigger>
-            <Dropdown.Menu className="fixed bg-tertiary w-[300px] rounded-[8px] z-100">
-                {sectors.map((sector) => (
-                    <Dropdown.Option key={sector.id} optionId={sector.id} className="p-[16px]">
-                        {sector.label}
-                    </Dropdown.Option>
-                ))}
-            </Dropdown.Menu>
-        </Dropdown>
-    );
-}
+  return (
+    <Dropdown className="relative w-40">
+      <Dropdown.Trigger className="flex items-center justify-between w-full px-4 py-2 bg-secondary border border-slate-700/50 rounded-xl text-sm font-semibold text-slate-200 hover:border-slate-500 transition-all">
+        {/* 현재 선택된 값을 표시합니다. */}
+        <Dropdown.Value value={selectedSector} />
+        <Dropdown.Icon />
+      </Dropdown.Trigger>
+      
+      <Dropdown.Menu className="absolute top-full left-0 w-full mt-2 py-1 bg-secondary border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+        {SECTORS.map((sector) => (
+          <Dropdown.Option
+            key={sector}
+            optionId={sector}
+            onSelect={(id) => setSelectedSector(id as SectorName)}
+            className={`
+              px-4 py-2 text-sm cursor-pointer transition-colors
+              ${selectedSector === sector 
+                ? 'bg-blue-600/20 text-blue-400 font-bold' 
+                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}
+            `}
+          >
+            {sector}
+          </Dropdown.Option>
+        ))}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
+};
