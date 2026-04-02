@@ -1,4 +1,4 @@
-import { useState} from 'react';
+import { useState, useMemo } from 'react';
 import { type Stock } from '@/entities/stock/types/stock.types';
 import * as d3 from 'd3';
 // @ts-ignore
@@ -6,19 +6,40 @@ import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
 import { StockTooltip } from './StockTooltip';
 import { useColorScale } from '@/shared/model/hooks/useColorScale';
 import { useVoronoiTreemap } from '@/features/stock-heatmap/hooks/useVoronoiTreemap';
+import { useStockStore } from '@/entities/stock/model/useStockStore';
+import { useHeatmapQuery } from '@/entities/stock/model/useHeatmap';
 
-interface StockProps {
-    data: Stock[]; 
-}
+export const BasicVoronoi = () => {
+  const selectedSector = useStockStore(state => state.selectedSectorId);
+  const setHoveredTicker = useStockStore(state => state.setHoveredTicker);
+  const hoveredTicker = useStockStore(state => state.hoveredTickerId);
 
-export const BasicVoronoi = ({ data }: StockProps) => {
+  // 1. 원본 데이터 전체를 가져옵니다 (stockMap 포함)
+  const { data: heatmapData } = useHeatmapQuery();
+
+  // 2. 필터링된 데이터 계산 (이 데이터가 바뀌어도 marketCap이 같으면 Voronoi는 재계산 안됨)
+  const filteredData = useMemo(() => {
+    if (!heatmapData) return [];
+    if (!selectedSector || selectedSector === '전체') {
+      return heatmapData.stocks;
+    }
+    return heatmapData.stocks.filter(stock => stock.sector === selectedSector);
+  }, [heatmapData?.stocks, selectedSector]);
+
+  // 3. 현재 마우스가 올라간 종목의 최신 데이터를 실시간으로 가져옴
+  const hoveredStock = useMemo(() => {
+    if (!hoveredTicker || !heatmapData) return null;
+    return heatmapData.stockMap.get(hoveredTicker) || null;
+  }, [hoveredTicker, heatmapData]);
+
   const width = 1060;
   const height = 500;
 
-  const [hoveredStock, setHoveredStock] = useState<Stock | null>(null);
   const [hoveredPosition, setHoveredPosition] = useState<{ x: number, y: number } | null>(null);  
   const colorScale = useColorScale();
-  const polygons = useVoronoiTreemap(data, width, height);
+  
+  // 다각형 모양 계산 (marketCap이 안 변하면 이 안의 d.data는 옛날 객체일 수 있음)
+  const polygons = useVoronoiTreemap(filteredData, width, height);
 
   return (
     <div style={{ position: 'relative' }}>
@@ -26,7 +47,10 @@ export const BasicVoronoi = ({ data }: StockProps) => {
         {polygons.map((d: any, i) => {
           if (!d.polygon) return null;
           
-          const stock = d.data as Stock;
+          // 핵심: 다각형에 저장된 ticker를 이용해 '진짜 최신 데이터'를 가져옵니다.
+          const staleStock = d.data as Stock;
+          const stock = heatmapData?.stockMap.get(staleStock.ticker) || staleStock;
+          
           const centroid = d3.polygonCentroid(d.polygon);
 
           return (
@@ -36,8 +60,14 @@ export const BasicVoronoi = ({ data }: StockProps) => {
                 fill={colorScale(stock.changePercent)}
                 stroke="#eee"
                 strokeWidth="0.5"
-                onMouseEnter={() => {setHoveredStock(stock); setHoveredPosition({ x: centroid[0], y: centroid[1] });} } 
-                onMouseLeave={() => {setHoveredStock(null); setHoveredPosition(null);}}
+                onMouseEnter={() => {
+                  setHoveredPosition({ x: centroid[0], y: centroid[1] });
+                  setHoveredTicker(stock.ticker);
+                }} 
+                onMouseLeave={() => {
+                  setHoveredPosition(null);
+                  setHoveredTicker(null);
+                }}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text
@@ -46,7 +76,6 @@ export const BasicVoronoi = ({ data }: StockProps) => {
                 fontSize="11"
                 fontWeight="900"
                 textAnchor="middle"
-                // 색상이 어느 정도 진해질 때(2% 이상)만 글자색을 흰색으로 변경
                 fill={Math.abs(stock.changePercent) > 2.0 ? "#fff" : "#1e293b"}
                 pointerEvents="none"
                 style={{ textShadow: Math.abs(stock.changePercent) <= 2.0 ? '0 0 2px white' : 'none' }}
@@ -58,7 +87,7 @@ export const BasicVoronoi = ({ data }: StockProps) => {
         })}
       </svg>
       {hoveredStock && (
-        <StockTooltip data={hoveredStock} x={hoveredPosition?.x} y={hoveredPosition?.y}   />
+        <StockTooltip data={hoveredStock} x={hoveredPosition?.x} y={hoveredPosition?.y} />
       )}
     </div>
   );

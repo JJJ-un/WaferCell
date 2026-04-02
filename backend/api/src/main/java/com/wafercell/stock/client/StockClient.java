@@ -94,15 +94,22 @@ public class StockClient {
                     .retrieve()
                     .body(Map.class);
 
-            if (response == null || !response.containsKey("output")) {
-                log.error("API 응답 오류 - TR_ID: {}, Response: {}", trId, response);
-                throw new RuntimeException("API 데이터를 가져오지 못했습니다.");
+            if (response == null) {
+                log.error("API 응답 결과가 null입니다. TR_ID: {}", trId);
+                throw new RuntimeException("API 응답을 받지 못했습니다.");
+            }
+
+            // 한국투자증권 API 표준: rt_cd가 "0"이면 성공입니다.
+            String rtCd = (String) response.get("rt_cd");
+            if (rtCd != null && !rtCd.equals("0")) {
+                log.error("API 비정상 응답 - TR_ID: {}, rt_cd: {}, msg: {}", trId, rtCd, response.get("msg1"));
+                throw new RuntimeException("API 호출 실패: " + response.get("msg1"));
             }
 
             return response;
         } catch (Exception e) {
             log.error("API 통신 중 오류 발생: {}", e.getMessage());
-            throw new RuntimeException("한국투자증권 API 통신 실패");
+            throw new RuntimeException("한국투자증권 API 통신 실패", e);
         }
     }
 }

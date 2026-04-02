@@ -328,7 +328,7 @@ public class StockService {
         return StockDetailDto.builder()
                 .name(stock.getName()).ticker(stock.getTicker()).sector(stock.getSector())
                 .marketCap(marketCap).changePercent(rate).price(last).highPrice(high).lowPrice(low)
-                .prevClose(base).volume(volume).tradingValue(tamt).strength(0.0).build();
+                .prevClose(base).volume(volume).tradingValue(tamt).strength(100.0).build();
     }
 
     private double parseDouble(Map<String, Object> map, String key) {
