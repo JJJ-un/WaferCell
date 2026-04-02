@@ -1,31 +1,24 @@
-import { useEffect, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { useStomp } from '@/shared/model/contexts/StompContext';
-import { updateHeatmapData, type IndexedStockHeatmap } from '@/entities/stock/model/updateHeatmap';
-import { type UpdatedStock } from '@/entities/stock/model/updateIndividualStock';
+import { useStockUpdater } from '@/entities/stock/model/useStockUpdater';
 
 /**
- * 실시간 주가 및 거래대금 강도, RSI, SOXX 상대수익률을 동기화하는 훅
+ * 실시간 웹소켓 데이터를 구독하고 업데이트 훅에 전달하는 역할만 수행합니다.
  */
 export const useRealtimeStocks = () => {
   const { isConnected, subscribe } = useStomp();
-  const queryClient = useQueryClient();
-
-  const handleUpdate = useCallback((data: UpdatedStock) => {
-    queryClient.setQueryData(['stocks', 'heatmap'], (prev: IndexedStockHeatmap | undefined) => {
-      if (!prev) return prev;
-      return updateHeatmapData(prev, data);
-    });
-  }, [queryClient]);
+  const { updateStockData } = useStockUpdater();
 
   useEffect(() => {
     if (!isConnected || !subscribe) return;
 
-    const subscription = subscribe('/topic/stocks', handleUpdate);
+    // 데이터가 오면 updater에게 책임을 넘깁니다.
+    const subscription = subscribe('/topic/stocks', updateStockData);
 
     return () => {
       subscription?.unsubscribe();
     };
-  }, [isConnected, subscribe, handleUpdate]);
+  }, [isConnected, subscribe, updateStockData]);
 };
+
 

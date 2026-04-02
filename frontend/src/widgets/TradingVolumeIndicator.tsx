@@ -7,10 +7,10 @@ import { useStockStore } from "@/entities/stock/model/useStockStore";
 export const TradingVolumeIndicator = () => {
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
 
-  // [성능 최적화] O(1) Map 조회 및 조건부 쿼리
+  // [성능 최적화] O(1) 객체 조회 및 조건부 쿼리
   const { tradingValue = 0, tradingValueRatio = 0 } = useHeatmapQuery(data => {
     if (!hoveredTicker) return { tradingValue: 0, tradingValueRatio: 0 };
-    const stock = data.stockMap.get(hoveredTicker);
+    const stock = data.stocks[hoveredTicker];
     return {
       tradingValue: stock?.tradingValue || 0,
       tradingValueRatio: stock?.tradingValueRatio || 0

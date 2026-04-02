@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useRef, useState, useCallback } from 'react';
+import { createContext, useEffect, useRef, useState, useCallback, useContext } from 'react';
 import { Client, type IMessage, type StompSubscription } from '@stomp/stompjs';
 
 interface StompContextProps {
@@ -54,18 +54,19 @@ export const StompProvider = ({ url, children }: { url: string; children: React.
         };
       }, [url]);
 
-    const subscribe = useCallback((topic: string, callback: (payload: any) => void) => {
+
+    // subscribe 좀 더 고도화
+    const subscribe = useCallback((url: string, onMessage: (payload: any) => void) => {
       if (!clientRef.current || !isConnected) {
         return null;
       }
-
-      console.log('📝 Subscribing to:', topic);
-      return clientRef.current.subscribe(topic, (message: IMessage) => {
+      
+      return clientRef.current.subscribe(url, (socketResponse: IMessage) => {
         try {
-          const payload = JSON.parse(message.body);
-          callback(payload);
+          const payload = JSON.parse(socketResponse.body);
+          onMessage(payload);
         } catch {
-          callback(message.body);
+          onMessage(socketResponse.body);
         }
       });
     }, [isConnected]);
@@ -78,7 +79,7 @@ export const StompProvider = ({ url, children }: { url: string; children: React.
 };
 
 export const useStomp = () => {
-  const context = React.useContext(StompContext);
+  const context = useContext(StompContext);
   if (!context) {
     throw new Error('useStomp는 StompProvider 안에서만 사용할 수 있습니다.');
   }

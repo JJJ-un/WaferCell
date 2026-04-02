@@ -11,26 +11,30 @@ import { useHeatmapQuery } from '@/entities/stock/model/useHeatmap';
 
 export const BasicVoronoi = () => {
   const selectedSector = useStockStore(state => state.selectedSectorId);
-  const setHoveredTicker = useStockStore(state => state.setHoveredTicker);
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
+  const { setHoveredTicker } = useStockStore(state => state.actions);
 
-  // 1. 원본 데이터 전체를 가져옵니다 (stockMap 포함)
+  // 1. 원본 데이터 전체를 가져옵니다
   const { data: heatmapData } = useHeatmapQuery();
 
-  // 2. 필터링된 데이터 계산 (이 데이터가 바뀌어도 marketCap이 같으면 Voronoi는 재계산 안됨)
+  // 2. 필터링된 데이터 계산
   const filteredData = useMemo(() => {
     if (!heatmapData) return [];
+    
+    // 객체를 배열로 변환하여 처리
+    const allStocks = Object.values(heatmapData.stocks);
+    
     if (!selectedSector || selectedSector === '전체') {
-      return heatmapData.stocks;
+      return allStocks;
     }
-    return heatmapData.stocks.filter(stock => stock.sector === selectedSector);
+    return allStocks.filter(stock => stock.sector === selectedSector);
   }, [heatmapData?.stocks, selectedSector]);
 
   // 3. 현재 마우스가 올라간 종목의 최신 데이터를 실시간으로 가져옴
   const hoveredStock = useMemo(() => {
     if (!hoveredTicker || !heatmapData) return null;
-    return heatmapData.stockMap.get(hoveredTicker) || null;
-  }, [hoveredTicker, heatmapData]);
+    return heatmapData.stocks[hoveredTicker] || null;
+  }, [hoveredTicker, heatmapData?.stocks]);
 
   const width = 1060;
   const height = 500;
@@ -49,7 +53,7 @@ export const BasicVoronoi = () => {
           
           // 핵심: 다각형에 저장된 ticker를 이용해 '진짜 최신 데이터'를 가져옵니다.
           const staleStock = d.data as Stock;
-          const stock = heatmapData?.stockMap.get(staleStock.ticker) || staleStock;
+          const stock = heatmapData?.stocks[staleStock.ticker] || staleStock;
           
           const centroid = d3.polygonCentroid(d.polygon);
 

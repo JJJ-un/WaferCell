@@ -10,10 +10,10 @@ export const TradeStrengthIndicator = () => {
 
   /** 
    * [성능 최적화 1] enabled: !!hoveredTicker (마우스가 올라갔을 때만 연산 시작)
-   * [성능 최적화 2] O(1) 조회: data.stockMap.get(hoveredTicker) (전체 배열 순회 find 대신 즉시 조회)
+   * [성능 최적화 2] O(1) 조회: data.stocks[hoveredTicker] (전체 배열 순회 find 대신 즉시 조회)
    */
   const { data: rawStrength = STRENGTH_BASE } = useHeatmapQuery(
-    data => hoveredTicker ? (data.stockMap.get(hoveredTicker)?.strength ?? STRENGTH_BASE) : STRENGTH_BASE,
+    data => hoveredTicker ? (data.stocks[hoveredTicker]?.strength ?? STRENGTH_BASE) : STRENGTH_BASE,
     !!hoveredTicker 
   );
 

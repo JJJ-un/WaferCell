@@ -9,7 +9,7 @@ const SECTORS: SectorName[] = [
 export const SectorDropdown = () => {
   // Zustand에서 상태와 액션을 직접 가져옵니다.
   const selectedSector = useStockStore(state => state.selectedSectorId);
-  const setSelectedSector = useStockStore(state => state.setSelectedSector);
+  const setSelectedSector = useStockStore(state => state.actions.setSelectedSector);
 
   return (
     <Dropdown className="relative w-40">
