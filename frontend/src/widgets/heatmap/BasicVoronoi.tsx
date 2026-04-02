@@ -6,7 +6,7 @@ import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
 import { StockTooltip } from './StockTooltip';
 import { useColorScale } from '@/shared/model/hooks/useColorScale';
 import { useVoronoiTreemap } from '@/features/stock-heatmap/hooks/useVoronoiTreemap';
-import { useStockStore } from '@/entities/stock/model/useStockStore';
+import { useStockStore } from '@/features/stock-heatmap/model/useStockStore';
 import { useHeatmapQuery } from '@/entities/stock/model/useHeatmap';
 
 export const BasicVoronoi = () => {

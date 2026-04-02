@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useStomp } from '@/shared/model/contexts/StompContext';
-import { useStockUpdater } from '@/entities/stock/model/useStockUpdater';
+import { useUpdateStockData } from './useUpdateStockData';
 
 /**
  * 실시간 웹소켓 데이터를 구독하고 업데이트 훅에 전달하는 역할만 수행합니다.
  */
 export const useRealtimeStocks = () => {
   const { isConnected, subscribe } = useStomp();
-  const { updateStockData } = useStockUpdater();
+  const { updateStockData } = useUpdateStockData();
 
   useEffect(() => {
     if (!isConnected || !subscribe) return;

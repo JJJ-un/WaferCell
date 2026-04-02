@@ -1,5 +1,5 @@
 import { type IndexedStockResponse, type UpdatedStock } from '@/entities/stock/types/stock.types';
-import { calculateStockUpdate } from '@/entities/stock/lib/updateIndividualStock';
+import { calculateStockUpdate } from './updateIndividualStock';
 
 
 /**

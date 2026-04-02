@@ -1,5 +1,5 @@
 import { Dropdown } from "@/shared/ui/dropdown/Dropdown";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 import { type SectorName } from "@/entities/stock/types/stock.types";
 
 const SECTORS: SectorName[] = [

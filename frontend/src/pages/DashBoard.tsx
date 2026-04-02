@@ -1,8 +1,8 @@
-import { BasicVoronoi } from "@/widgets/BasicVoronoi";
-import { SectorDropdown } from "@/widgets/SectorDropdown";
-import { TradeStrengthIndicator } from "@/widgets/TradeStrengthIndicator";
-import { RsiIndicator } from "@/widgets/RsiIndicator";
-import { TradingVolumeIndicator } from "@/widgets/TradingVolumeIndicator";
+import { BasicVoronoi } from "@/widgets/heatmap/BasicVoronoi";
+import { SectorDropdown } from "@/widgets/heatmap/SectorDropdown";
+import { TradeStrengthIndicator } from "@/widgets/sub-indicator/TradeStrengthIndicator";
+import { RsiIndicator } from "@/widgets/sub-indicator/RsiIndicator";
+import { TradingVolumeIndicator } from "@/widgets/sub-indicator/TradingVolumeIndicator";
 import { useRealtimeStocks } from "@/features/realtime-stock/hooks/useRealtimeStocks";
 
 export const DashBoard = () => {

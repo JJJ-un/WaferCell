@@ -4,7 +4,7 @@ import '@/shared/styles/theme.css'
 import { DashBoard } from './pages/DashBoard'
 import { StompProvider } from './shared/model/contexts/StompContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; 
-import { NewsFeed } from './widgets/NewsFeed'
+import { NewsFeed } from './widgets/news-feed/NewsFeed'
 
 const WEBSOCKET_URL = import.meta.env.VITE_WS_URL;
 

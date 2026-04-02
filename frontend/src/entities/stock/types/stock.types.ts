@@ -24,13 +24,13 @@ export interface Stock extends StockSummary {
   highPrice: number;
   lowPrice: number;
   prevClose: number;
-  // --- 실시간 지표 ---
   tradingValue?: number;
   strength?: number;
-  relativeChange?: number;
   rsi?: number;
   averageTradingValue?: number;
   tradingValueRatio?: number;
+  // SOXX 대비 상대 변동률(아직쓰이지 않고 있다.)
+  relativeChange?: number;
 }
 
 // 4. 인덱싱된 히트맵 구조 (사용자 제안 반영: O(1) 접근 가능)
@@ -54,6 +54,7 @@ export interface UpdatedStock {
   tradingValue?: string;
   strength?: string;
   rsi?: string;
+  tradingValueRatio?: string;
 }
 
 // 웹소켓에서 해당과 같은 형태로 값을 불러온다. 

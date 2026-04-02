@@ -1,6 +1,6 @@
 import Card from "@/shared/ui/card/Card";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 
 export const RsiIndicator = () => {
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);

@@ -1,6 +1,6 @@
 import Card from "@/shared/ui/card/Card";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 
 
 // Volume이 아니 거래대금인 Value로 바꿔야함
