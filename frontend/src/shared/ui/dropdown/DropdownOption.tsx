@@ -3,7 +3,7 @@
 import { type ComponentPropsWithoutRef, useContext } from "react";
 import { DropdownContext } from "@/shared/model/contexts/DropdownContextProvider";
 
-interface DropdownOptionProps extends ComponentPropsWithoutRef<'div'> {
+interface DropdownOptionProps extends Omit<ComponentPropsWithoutRef<'div'>, 'onSelect'> {
   optionId: string | number | null;
   onSelect?: (id: string | number | null) => void; // 클릭 시 부모에게 알림
 }

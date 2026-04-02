@@ -1,18 +1,23 @@
 import Card from "@/shared/ui/card/Card";
+import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
+import { useStockStore } from "@/entities/stock/model/useStockStore";
 
-interface RsiIndicatorProps {
-  rsi?: number; // 0 ~ 100 사이의 값
-}
+export const RsiIndicator = () => {
+  const hoveredTicker = useStockStore(state => state.hoveredTickerId);
 
-export const RsiIndicator = ({ rsi = 50 }: RsiIndicatorProps) => {
-  // 1. 상태 및 색상 정의
-  const isOverbought = rsi >= 70; // 과매수 (위험/고점)
-  const isOversold = rsi <= 30;   // 과매도 (기회/저점)
+  // useHeatmapQuery가 반환하는 데이터는 setQueryData에 의해 실시간으로 업데이트된 객체입니다.
+  const { data: rsi = 50 } = useHeatmapQuery(
+    data => hoveredTicker ? (data.stockMap.get(hoveredTicker)?.rsi ?? 50) : 50,
+    !!hoveredTicker
+  );
+
+  const isOverbought = rsi >= 70;
+  const isOversold = rsi <= 30;
   
   const getRsiColor = () => {
-    if (isOverbought) return '#f87171'; // Red-400
-    if (isOversold) return '#60a5fa';   // Blue-400
-    return '#34d399';                  // Emerald-400 (안정)
+    if (isOverbought) return '#f87171';
+    if (isOversold) return '#60a5fa';
+    return '#34d399';
   };
 
   const rsiColor = getRsiColor();
@@ -22,7 +27,7 @@ export const RsiIndicator = ({ rsi = 50 }: RsiIndicatorProps) => {
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">심리 지표</span>
-          <span className="text-[9px] text-slate-500 font-medium">Relative Strength Index</span>
+          <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 
           className="text-2xl font-black tracking-tighter transition-all duration-500"
@@ -31,27 +36,21 @@ export const RsiIndicator = ({ rsi = 50 }: RsiIndicatorProps) => {
             textShadow: `0 0 15px ${rsiColor}44`
           }}
         >
-          {rsi.toFixed(1)}<span className="text-xs ml-0.5 opacity-70 font-medium text-slate-400">pt</span>
+          {rsi.toFixed(1)}
         </div>
       </header>
 
       <section className="py-4">
         <div className="flex justify-between text-[9px] font-black uppercase tracking-tighter mb-2">
-          <span className={isOversold ? 'text-blue-400' : 'text-slate-500'}>Oversold</span>
-          <span className="text-slate-400">Neutral</span>
-          <span className={isOverbought ? 'text-red-400' : 'text-slate-500'}>Overbought</span>
+          <span className={isOversold ? 'text-blue-400' : 'text-slate-500'}>과매도</span>
+          <span className="text-slate-400">중립</span>
+          <span className={isOverbought ? 'text-red-400' : 'text-slate-500'}>과매수</span>
         </div>
 
-        {/* RSI 게이지 바 */}
         <div className="relative h-3 w-full bg-bg rounded-full border border-slate-800/40 shadow-inner overflow-hidden">
-          {/* 안전 영역 배경 (30% ~ 70%) */}
           <div className="absolute left-[30%] right-[30%] h-full bg-white/5" />
-          
-          {/* 30, 70 지점 구분선 */}
           <div className="absolute left-[30%] top-0 w-px h-full bg-slate-700/50 z-10" />
           <div className="absolute left-[70%] top-0 w-px h-full bg-slate-700/50 z-10" />
-          
-          {/* 실제 RSI 바 */}
           <div 
             className="absolute left-0 h-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]"
             style={{ 
@@ -72,7 +71,9 @@ export const RsiIndicator = ({ rsi = 50 }: RsiIndicatorProps) => {
       </section>
 
       <footer className="text-[10px] text-center font-medium text-slate-500 italic">
-        {isOverbought ? (
+        {!hoveredTicker ? (
+          <span>종목 심리 지수를 확인해 보세요</span>
+        ) : isOverbought ? (
           <span className="text-red-400">시장이 과열되었습니다. 조정 가능성에 유의하세요.</span>
         ) : isOversold ? (
           <span className="text-blue-400">과도한 매도세가 발생했습니다. 반등을 기대할 수 있습니다.</span>

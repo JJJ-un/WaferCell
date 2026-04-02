@@ -1,26 +1,30 @@
 import Card from "@/shared/ui/card/Card";
+import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
+import { useStockStore } from "@/entities/stock/model/useStockStore";
 
-interface TradingValueIndicatorProps {
-  tradingValue?: number;       // 현재 누적 거래대금 (원)
-  tradingValueRatio?: number;   // 평소 대비 거래대금 비율 (%)
-}
 
-export const TradingValueIndicator = ({ 
-  tradingValue = 10000000000, 
-  tradingValueRatio = 300 
-}: TradingValueIndicatorProps) => {
-  // 1. 거래대금 '억' 단위 환산 (소수점 1자리까지)
-  const amountInEok = tradingValue / 100_000_000;
-  
-  // 2. 상태 정의 (100% 돌파 시 활성, 200% 돌파 시 폭발)
+// Volume이 아니 거래대금인 Value로 바꿔야함
+export const TradingVolumeIndicator = () => {
+  const hoveredTicker = useStockStore(state => state.hoveredTickerId);
+
+  // [성능 최적화] O(1) Map 조회 및 조건부 쿼리
+  const { tradingValue = 0, tradingValueRatio = 0 } = useHeatmapQuery(data => {
+    if (!hoveredTicker) return { tradingValue: 0, tradingValueRatio: 0 };
+    const stock = data.stockMap.get(hoveredTicker);
+    return {
+      tradingValue: stock?.tradingValue || 0,
+      tradingValueRatio: stock?.tradingValueRatio || 0
+    };
+  }, !!hoveredTicker).data || {};
+
+  const amountInEokDollar = tradingValue / 100_000_000;
   const isActive = tradingValueRatio >= 100;
   const isExplosive = tradingValueRatio >= 200;
 
-  // 3. 색상 로직 (디자인 시스템 변수 활용)
   const getStatusColor = () => {
-    if (isExplosive) return 'var(--color-trend-up-700)'; // 강렬한 레드
-    if (isActive) return '#f59e0b'; // 활기찬 Amber
-    return 'var(--color-slate-500)'; // 정적인 슬레이트
+    if (isExplosive) return 'var(--color-trend-up-700)';
+    if (isActive) return '#f59e0b';
+    return 'var(--color-slate-500)';
   };
 
   const statusColor = getStatusColor();
@@ -30,7 +34,7 @@ export const TradingValueIndicator = ({
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">거래대금</span>
-          <span className="text-[9px] text-slate-500 font-medium">Trading Value</span>
+          <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 
           className="text-2xl font-black tracking-tighter text-slate-100 transition-all duration-500"
@@ -38,8 +42,8 @@ export const TradingValueIndicator = ({
             textShadow: isActive ? `0 0 20px ${statusColor}44` : 'none'
           }}
         >
-          {amountInEok.toLocaleString(undefined, { maximumFractionDigits: 1 })}
-          <span className="text-xs ml-0.5 opacity-70 font-medium text-slate-400">억</span>
+          {amountInEokDollar.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+          <span className="text-xs ml-0.5 opacity-70 font-medium text-slate-400">억$</span>
         </div>
       </header>
 
@@ -54,12 +58,8 @@ export const TradingValueIndicator = ({
           </span>
         </div>
 
-        {/* 게이지 바: 200% 스케일 (중앙 50% 지점이 평소 거래량인 100%) */}
         <div className="relative h-3 w-full bg-bg rounded-full border border-slate-800/40 shadow-inner overflow-hidden">
-          {/* 100% (평균) 지점 가이드 라인 */}
           <div className="absolute left-1/2 top-0 w-0.5 h-full bg-white/20 z-10" />
-          
-          {/* 실제 채워지는 게이지 바 */}
           <div 
             className="absolute left-0 h-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]"
             style={{ 
@@ -78,7 +78,9 @@ export const TradingValueIndicator = ({
       </section>
 
       <footer className="text-[10px] text-center font-medium text-slate-500 italic">
-        {isExplosive ? (
+        {!hoveredTicker ? (
+          <span>종목 위에 마우스를 올려 보세요</span>
+        ) : isExplosive ? (
           <span className="text-red-400 animate-pulse">⚠️ 역대급 자금 유입! 시장의 주목을 받고 있습니다</span>
         ) : isActive ? (
           <span className="text-amber-400">평균치를 상회하며 에너지가 응집되고 있습니다</span>

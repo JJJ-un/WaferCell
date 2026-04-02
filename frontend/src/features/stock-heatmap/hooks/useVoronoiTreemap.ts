@@ -12,6 +12,10 @@ type HeatmapNode = { name: string; children: Stock[] } | Stock;
  * 데이터를 바탕으로 보로노이 트리맵 다각형 좌표를 계산하는 훅
  */
 export const useVoronoiTreemap = (stocks: Stock[], width: number, height: number) => {
+
+  const stockKeys = useMemo(() => 
+    stocks.map(s => `${s.ticker}-${s.marketCap}`).join(','), 
+  [stocks]);
   
 
   // 2. D3 계층 구조(Hierarchy) 생성
@@ -24,7 +28,7 @@ export const useVoronoiTreemap = (stocks: Stock[], width: number, height: number
           .sum((d) => {
             return 'marketCap' in d ? d.marketCap : 0;
           });
-  }, [stocks]); 
+  }, [stockKeys]); 
 
   // 3. 보로노이 트리맵 알고리즘 실행 및 다각형(Polygons) 반환
   const polygons = useMemo(() => {
