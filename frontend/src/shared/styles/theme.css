@@ -1,15 +1,5 @@
 @import "tailwindcss";
 
-@layer base {
-  body {
-    background-color: var(--color-bg);
-    color: var(--color-slate-200);
-    margin: 0;
-    font-family: sans-serif;
-    
-  }
-}
-
 @theme {
   /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
   --color-bg: #0B1326;
@@ -18,6 +8,10 @@
   --color-primary: #131B2E;
   --color-secondary: #222A3D;
   --color-tertiary: #323a50;
+
+  --color-text-primary: #DAE2FD;
+  --color-text-secondary: #BBCABF;
+  --color-text-tertiary: #F5F5F5;
 
   /* 하락 구간 (Blue) */
   --color-trend-down-900: #1e3a8a; /* -10% */
@@ -35,4 +29,47 @@
   --color-trend-up-500: #f87171;   /* +2% */
   --color-trend-up-700: #dc2626;   /* +5% */
   --color-trend-up-900: #7f1d1d;   /* +10% */
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+}
+
+@theme {
+    @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+@layer base {
+  html, body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-slate-200);
+    margin: 0;
+    font-family: 'Pretendard', sans-serif;
+  }
+
+  html::-webkit-scrollbar, 
+  body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}
+
+@layer utilities {
+  /* 스크롤바 숨기기 (Chrome, Safari, Edge) */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 스크롤바 숨기기 (Firefox, IE) */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }

@@ -31,10 +31,10 @@ export const TradeStrengthIndicator = () => {
   const activeColor = isNeutral ? 'var(--color-slate-500)' : (isBullish ? bullColor : bearColor);
 
   return (
-    <Card className="w-[260px] h-[170px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
+    <Card className="w-[330px] h-[210px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">체결 강도</span>
+          <span className="text-slate-400 text-[16px] font-bold uppercase tracking-widest">체결 강도</span>
           <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 
