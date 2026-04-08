@@ -77,8 +77,8 @@ export const BasicVoronoi = () => {
               <text
                 x={centroid[0]}
                 y={centroid[1]}
-                fontSize="11"
-                fontWeight="900"
+                fontSize="20"
+                fontWeight="semi-bold"
                 textAnchor="middle"
                 fill={Math.abs(stock.changePercent) > 2.0 ? "#fff" : "#1e293b"}
                 pointerEvents="none"
