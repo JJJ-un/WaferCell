@@ -1,16 +1,16 @@
 import Card from "@/shared/ui/card/Card";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 
 
 // Volume이 아니 거래대금인 Value로 바꿔야함
 export const TradingVolumeIndicator = () => {
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
 
-  // [성능 최적화] O(1) Map 조회 및 조건부 쿼리
+  // [성능 최적화] O(1) 객체 조회 및 조건부 쿼리
   const { tradingValue = 0, tradingValueRatio = 0 } = useHeatmapQuery(data => {
     if (!hoveredTicker) return { tradingValue: 0, tradingValueRatio: 0 };
-    const stock = data.stockMap.get(hoveredTicker);
+    const stock = data.stocks[hoveredTicker];
     return {
       tradingValue: stock?.tradingValue || 0,
       tradingValueRatio: stock?.tradingValueRatio || 0
@@ -30,10 +30,10 @@ export const TradingVolumeIndicator = () => {
   const statusColor = getStatusColor();
 
   return (
-    <Card className="w-[260px] h-[170px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
+    <Card className="w-[330px] h-[210px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">거래대금</span>
+          <span className="text-slate-400 text-[16px] font-bold uppercase tracking-widest">거래대금</span>
           <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 

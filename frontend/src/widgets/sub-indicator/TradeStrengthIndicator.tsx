@@ -1,6 +1,6 @@
 import Card from "@/shared/ui/card/Card";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 
 const STRENGTH_BASE = 100;
 const MAX_OFFSET = 50; 
@@ -10,10 +10,10 @@ export const TradeStrengthIndicator = () => {
 
   /** 
    * [성능 최적화 1] enabled: !!hoveredTicker (마우스가 올라갔을 때만 연산 시작)
-   * [성능 최적화 2] O(1) 조회: data.stockMap.get(hoveredTicker) (전체 배열 순회 find 대신 즉시 조회)
+   * [성능 최적화 2] O(1) 조회: data.stocks[hoveredTicker] (전체 배열 순회 find 대신 즉시 조회)
    */
   const { data: rawStrength = STRENGTH_BASE } = useHeatmapQuery(
-    data => hoveredTicker ? (data.stockMap.get(hoveredTicker)?.strength ?? STRENGTH_BASE) : STRENGTH_BASE,
+    data => hoveredTicker ? (data.stocks[hoveredTicker]?.strength ?? STRENGTH_BASE) : STRENGTH_BASE,
     !!hoveredTicker 
   );
 
@@ -31,10 +31,10 @@ export const TradeStrengthIndicator = () => {
   const activeColor = isNeutral ? 'var(--color-slate-500)' : (isBullish ? bullColor : bearColor);
 
   return (
-    <Card className="w-[260px] h-[170px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
+    <Card className="w-[330px] h-[210px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">체결 강도</span>
+          <span className="text-slate-400 text-[16px] font-bold uppercase tracking-widest">체결 강도</span>
           <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 

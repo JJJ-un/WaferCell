@@ -1,33 +1,17 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { fetchNewsList } from '@/entities/stock/api/fetchNews';
 import { useState, useEffect, useRef } from 'react';
+import { useNewsQuery } from '@/shared/model/hooks/useNewsQuery';
 
-/**
- * 실시간 해외 속보 피드 위젯 (무한 스크롤 적용)
- */
 export const NewsFeed = () => {
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
 
-  // 무한 스크롤을 위한 useInfiniteQuery 사용
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-  } = useInfiniteQuery({
-    queryKey: ['stocks', 'news'],
-    queryFn: ({ pageParam }) => fetchNewsList(pageParam),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => {
-      // 마지막 페이지의 마지막 아이템의 ID(srno)를 다음 페이지 호출 시 파라미터로 사용
-      if (!lastPage || lastPage.length === 0) return undefined;
-      return lastPage[lastPage.length - 1].id;
-    },
-    // 최신 뉴스를 위해 첫 페이지는 주기적으로 자동 갱신 가능 (선택 사항)
-    // refetchInterval: 60000, 
-  });
+  } = useNewsQuery();
 
   // 스크롤 감지를 위한 Intersection Observer 설정
   useEffect(() => {
@@ -51,42 +35,32 @@ export const NewsFeed = () => {
     setSelectedNews(content);
   };
 
-  if (isLoading) return <div className="p-4 text-slate-400">뉴스를 불러오는 중...</div>;
+  if (isLoading) return <div className="flex items-center justify-center w-full p-4 text-slate-400">뉴스를 불러오는 중...</div>;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-        <h3 className="font-bold text-slate-800 flex items-center gap-2">
-          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+    <div className="flex flex-col h-[600px] w-full rounded-xl shadow-sm overflow-hidden">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-bold text-text-tertiary text-[24px] flex items-center gap-2">
           실시간 해외 속보
         </h3>
+        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
       </div>
 
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         {data?.pages.map((page) =>
           page.map((news) => (
             <div 
               key={news.id} 
               onClick={() => handleNewsClick(news.title)}
-              className="p-4 cursor-pointer hover:bg-blue-50 transition-colors group"
+              className="py-4 cursor-pointer group"
             >
-              <div className="text-sm font-semibold text-slate-700 group-hover:text-blue-600 line-clamp-2 mb-2">
+              <div className="text-sm font-semibold text-text-primary group-hover:text-trend-down-500 transition-colors duration-200 line-clamp-2 mb-2">
                 {news.title}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                 <span className="font-medium text-slate-500">{news.source}</span>
                 <span>•</span>
                 <span>{news.time.substring(0, 2)}:{news.time.substring(2, 4)}</span>
-                <div className="flex gap-1 ml-auto">
-                  {news.tickers.map(ticker => (
-                    <span 
-                      key={ticker} 
-                      className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200"
-                    >
-                      ${ticker}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
           ))

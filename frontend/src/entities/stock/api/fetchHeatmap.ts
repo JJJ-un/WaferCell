@@ -1,8 +1,7 @@
 import { apiClient } from '@/shared/api/apiClient';
-import { type StockHeatmap } from '../types/stock.types';
+import { type StockResponse } from '../types/stock.types';
 
-export const fetchHeatmap = async (): Promise<StockHeatmap> => {
-  const { data } = await apiClient.get<StockHeatmap>('/stocks/heatmap');
-  console.log('Fetched heatmap data:', data); // 디버깅 로그
+export const fetchHeatmap = async (): Promise<StockResponse> => {
+  const { data } = await apiClient.get<StockResponse>('/stocks/heatmap');
   return data;
 };

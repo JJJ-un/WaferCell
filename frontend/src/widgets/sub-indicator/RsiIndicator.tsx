@@ -1,13 +1,13 @@
 import Card from "@/shared/ui/card/Card";
 import { useHeatmapQuery } from "@/entities/stock/model/useHeatmap";
-import { useStockStore } from "@/entities/stock/model/useStockStore";
+import { useStockStore } from "@/features/stock-heatmap/model/useStockStore";
 
 export const RsiIndicator = () => {
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
 
   // useHeatmapQuery가 반환하는 데이터는 setQueryData에 의해 실시간으로 업데이트된 객체입니다.
   const { data: rsi = 50 } = useHeatmapQuery(
-    data => hoveredTicker ? (data.stockMap.get(hoveredTicker)?.rsi ?? 50) : 50,
+    data => hoveredTicker ? (data.stocks[hoveredTicker]?.rsi ?? 50) : 50,
     !!hoveredTicker
   );
 
@@ -23,10 +23,10 @@ export const RsiIndicator = () => {
   const rsiColor = getRsiColor();
 
   return (
-    <Card className="w-[260px] h-[170px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
+    <Card className="w-[330px] h-[210px] p-5 flex flex-col justify-between bg-primary border-slate-800/60 backdrop-blur-lg">
       <header className="flex justify-between items-end pb-2 border-b border-slate-800/50">
         <div className="flex flex-col">
-          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">심리 지표</span>
+          <span className="text-slate-400 text-[16px] font-bold uppercase tracking-widest">심리 지표</span>
           <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 

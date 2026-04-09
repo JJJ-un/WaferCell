@@ -1,30 +1,40 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchHeatmap } from '../api/fetchHeatmap';
-import type { StockHeatmap, Stock } from '../types/stock.types';
+import type { StockResponse, IndexedStockResponse, StockSummary, Stock } from '../types/stock.types';
 
-// 선택된 데이터와 인덱싱된 Map을 포함하는 확장 타입
-export interface IndexedStockHeatmap extends StockHeatmap {
-  stockMap: Map<string, Stock>;
-}
+// 초기 배열 데이터를 인덱싱된 Record 데이터로 변환, 최초 1회 계산
+const indexStocks = (data: StockResponse): IndexedStockResponse => {
+  const stocksRecord: Record<string, Stock> = {};
+  data.stocks.forEach(stock => {
+    stocksRecord[stock.ticker] = stock;
+  });
 
-// 유틸리티 함수로 분리
-const indexStocks = (data: StockHeatmap): IndexedStockHeatmap => ({
-  ...data,
-  stockMap: new Map(data.stocks.map(stock => [stock.ticker, stock]))
-});
+  const sectorsRecord: Record<string, StockSummary> = {};
+  data.sectors.forEach(sector => {
+    sectorsRecord[sector.name] = sector;
+  });
 
-export const useHeatmapQuery = <T = IndexedStockHeatmap>(
-  select?: (data: IndexedStockHeatmap) => T,
+  return {
+    overall: data.overall,
+    sectors: sectorsRecord,
+    stocks: stocksRecord,
+  };
+};
+
+// 우리는 해당 값으로 작업할 것이다.
+export const useHeatmapQuery = <T = IndexedStockResponse>(
+  select?: (data: IndexedStockResponse) => T,
   enabled: boolean = true
 ) => {
-  return useQuery<IndexedStockHeatmap, Error, T>({
+  return useQuery<IndexedStockResponse, Error, T>({
     queryKey: ['stocks', 'heatmap'],
     queryFn: async () => {
       const data = await fetchHeatmap();
+      // API에서 받아온 데이터를 인덱싱된 형태로 변환하여 반환 => 계산하기 편하게
       return indexStocks(data);
     },
     staleTime: Infinity,
-    select: select as (data: IndexedStockHeatmap) => T,
+    select: select as (data: IndexedStockResponse) => T,
     enabled
   });
 };
