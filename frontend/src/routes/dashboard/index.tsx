@@ -1,4 +1,4 @@
-import { BasicVoronoi } from "@/widgets/heatmap/BasicVoronoi";
+import { StandardHeatmap } from "@/widgets/heatmap/StandardHeatmap";
 import { SectorDropdown } from "@/widgets/heatmap/SectorDropdown";
 import { TradeStrengthIndicator } from "@/widgets/sub-indicator/TradeStrengthIndicator";
 import { RsiIndicator } from "@/widgets/sub-indicator/RsiIndicator";
@@ -13,7 +13,7 @@ export const DashBoard = () => {
     return (
         <div className="p-[24px] flex flex-col gap-[24px]">
             <SectorDropdown/>
-            <BasicVoronoi/>
+            <StandardHeatmap/>
             <div className="flex gap-6">
                 <TradeStrengthIndicator />
                 <TradingVolumeIndicator/>
