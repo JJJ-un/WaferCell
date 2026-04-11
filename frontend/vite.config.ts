@@ -4,11 +4,12 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import svgr from "vite-plugin-svgr";
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  plugins: [react(), tailwindcss(), svgr(), tsconfigPaths()],
+  plugins: [TanStackRouterVite(), react(), tailwindcss(), svgr(), tsconfigPaths()],
   define: {
     global: 'window',
   },

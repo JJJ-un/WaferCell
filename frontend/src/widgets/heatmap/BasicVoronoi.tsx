@@ -8,11 +8,14 @@ import { useColorScale } from '@/shared/model/hooks/useColorScale';
 import { useVoronoiTreemap } from '@/features/stock-heatmap/hooks/useVoronoiTreemap';
 import { useStockStore } from '@/features/stock-heatmap/model/useStockStore';
 import { useHeatmapQuery } from '@/entities/stock/model/useHeatmap';
+import { useNavigate } from '@tanstack/react-router';
 
 export const BasicVoronoi = () => {
   const selectedSector = useStockStore(state => state.selectedSectorId);
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
   const { setHoveredTicker } = useStockStore(state => state.actions);
+  const navigate = useNavigate();
+
 
   // 1. 원본 데이터 전체를 가져옵니다
   const { data: heatmapData } = useHeatmapQuery();
@@ -72,6 +75,7 @@ export const BasicVoronoi = () => {
                   setHoveredPosition(null);
                   setHoveredTicker(null);
                 }}
+                onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.ticker } })}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text
