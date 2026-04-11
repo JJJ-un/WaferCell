@@ -14,7 +14,7 @@ export const DashBoard = () => {
         <div className="p-[24px] flex flex-col gap-[24px]">
             <SectorDropdown/>
             <StandardHeatmap/>
-            <div className="flex gap-6">
+            <div className="flex justify-between">
                 <TradeStrengthIndicator />
                 <TradingVolumeIndicator/>
                 <RsiIndicator />

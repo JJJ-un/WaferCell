@@ -38,7 +38,7 @@ export const NewsFeed = () => {
   if (isLoading) return <div className="flex items-center justify-center w-full p-4 text-slate-400">뉴스를 불러오는 중...</div>;
 
   return (
-    <div className="flex flex-col h-[600px] w-full rounded-xl overflow-hidden">
+    <div className="flex flex-col w-full rounded-lg overflow-hidden">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-foreground text-[24px] flex items-center gap-2">
           실시간 해외 속보

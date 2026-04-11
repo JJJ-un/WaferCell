@@ -16,7 +16,7 @@ const Card = ({
       bg-primary
       border-none
       p-6
-      rounded-2xl
+      rounded-lg
       overflow-hidden
       ${className}
     `}>

@@ -11,7 +11,7 @@ export const Route = createRootRoute({
           <div className="flex-1">
             <Outlet />
           </div>
-          <div className="w-[340px] bg-primary flex flex-col items-center h-[800px] p-6 mt-[24px] mr-[24px] rounded-xl">
+          <div className="w-[340px] bg-primary flex flex-col items-center h-[795px] p-6 mt-[24px] mr-[24px] rounded-lg">
             <NewsFeed/>
           </div>
         </div>
