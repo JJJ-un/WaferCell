@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as ChartIndexRouteImport } from './routes/chart/index'
 import { Route as ChartTickerRouteImport } from './routes/chart/$ticker'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChartIndexRoute = ChartIndexRouteImport.update({
+  id: '/chart/',
+  path: '/chart/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChartTickerRoute = ChartTickerRouteImport.update({
   id: '/chart/$ticker',
   path: '/chart/$ticker',
@@ -32,30 +38,34 @@ const ChartTickerRoute = ChartTickerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chart/$ticker': typeof ChartTickerRoute
+  '/chart/': typeof ChartIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chart/$ticker': typeof ChartTickerRoute
+  '/chart': typeof ChartIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/chart/$ticker': typeof ChartTickerRoute
+  '/chart/': typeof ChartIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chart/$ticker' | '/dashboard/'
+  fullPaths: '/' | '/chart/$ticker' | '/chart/' | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chart/$ticker' | '/dashboard'
-  id: '__root__' | '/' | '/chart/$ticker' | '/dashboard/'
+  to: '/' | '/chart/$ticker' | '/chart' | '/dashboard'
+  id: '__root__' | '/' | '/chart/$ticker' | '/chart/' | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChartTickerRoute: typeof ChartTickerRoute
+  ChartIndexRoute: typeof ChartIndexRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chart/': {
+      id: '/chart/'
+      path: '/chart'
+      fullPath: '/chart/'
+      preLoaderRoute: typeof ChartIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chart/$ticker': {
       id: '/chart/$ticker'
       path: '/chart/$ticker'
@@ -88,6 +105,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChartTickerRoute: ChartTickerRoute,
+  ChartIndexRoute: ChartIndexRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 export const routeTree = rootRouteImport

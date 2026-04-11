@@ -1,8 +1,89 @@
 @import "tailwindcss";
 
-@theme {
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* 1. 배경 및 레이아웃 */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-header: var(--header);
+
+   /* 사이드 바, 메뉴 바 등등*/
+
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-tertiary: var(--tertiary);
+
+  /* 2. 텍스트 */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+
+  /* 3. 트렌드 (하락 - Blue) */
+  --color-trend-down-900: var(--trend-down-900);
+  --color-trend-down-700: var(--trend-down-700);
+  --color-trend-down-500: var(--trend-down-500);
+  --color-trend-down-300: var(--trend-down-300);
+  --color-trend-down-100: var(--trend-down-100);
+
+  /* 4. 중립 및 상승 (Red) */
+  --color-trend-zero: var(--trend-zero);
+  --color-trend-up-100: var(--trend-up-100);
+  --color-trend-up-300: var(--trend-up-300);
+  --color-trend-up-500: var(--trend-up-500);
+  --color-trend-up-700: var(--trend-up-700);
+  --color-trend-up-900: var(--trend-up-900);
+
+  /* 애니메이션 */
+  --animate-fade-in: fade-in 0.3s ease-out;
+}
+
+:root {
   /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
-  --color-bg: #0B1326;
+  --background: oklch(0.967 0.003 241.69);
+  --foreground: oklch(0.147 0.004 49.25);
+
+  --header:oklch(1 0 0);
+
+   /* 사이드 바, 메뉴 바 등등*/
+  --primary: oklch(1 0 0);
+  --secondary: #BBCABF;
+  --tertiary: #F5F5F5;
+
+  --text-primary: #DAE2FD;
+  --text-secondary: #BBCABF;
+  --text-tertiary: #F5F5F5;
+
+  /* 하락 구간 (Blue) */
+  --trend-down-900: #1e3a8a; /* -10% */
+  --trend-down-700: #1d4ed8; /* -5% */
+  --trend-down-500: #3b82f6; /* -2% */
+  --trend-down-300: #93c5fd; /* -0.5% */
+  --trend-down-100: #dbeafe; /* -0.01% */
+
+  /* 중립 (White) */
+  --trend-zero: #ffffff;      /* 0% */
+
+  /* 상승 구간 (Red) */
+  --trend-up-100: #fee2e2;   /* +0.01% */
+  --trend-up-300: #fca5a5;   /* +0.5% */
+  --trend-up-500: #f87171;   /* +2% */
+  --trend-up-700: #dc2626;   /* +5% */
+  --trend-up-900: #7f1d1d;   /* +10% */
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+}
+
+.dark {
+  {
+  /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
+  --color-background: oklch(0.967 0.003 241.69);
+  --color-foreground: #131B2E;
+
+  --header:#131B2E;
 
    /* 사이드 바, 메뉴 바 등등*/
   --color-primary: #131B2E;
@@ -33,6 +114,7 @@
   /* Animations */
   --animate-fade-in: fade-in 0.3s ease-out;
 
+}
 }
 
 @theme {

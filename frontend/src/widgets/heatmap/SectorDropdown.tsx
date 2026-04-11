@@ -13,13 +13,13 @@ export const SectorDropdown = () => {
 
   return (
     <Dropdown className="relative w-40">
-      <Dropdown.Trigger className="flex items-center justify-between w-full px-4 py-2 bg-secondary border border-slate-700/50 rounded-xl text-sm font-semibold text-slate-200 hover:border-slate-500 transition-all">
+      <Dropdown.Trigger className="flex items-center justify-between w-full px-4 py-2 bg-primary rounded-xl text-foreground text-sm hover:border-slate-500 transition-all">
         {/* 현재 선택된 값을 표시합니다. */}
         <Dropdown.Value value={selectedSector} />
         <Dropdown.Icon />
       </Dropdown.Trigger>
       
-      <Dropdown.Menu className="absolute top-full left-0 w-full mt-2 py-1 bg-secondary border border-slate-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+      <Dropdown.Menu className="absolute top-full left-0 w-full mt-2 py-1 bg-primary border rounded-xl shadow-2xl z-50 overflow-hidden">
         {SECTORS.map((sector) => (
           <Dropdown.Option
             key={sector}

@@ -13,7 +13,7 @@ const Card = ({
   
   return (
     <div className={`
-      bg-secondary
+      bg-primary
       border-none
       p-6
       rounded-2xl

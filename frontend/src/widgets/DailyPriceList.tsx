@@ -16,8 +16,8 @@ export const DailyPriceList = ({ dailyPrices }: DailyPriceListProps) => {
     return (
         <div className="p-[24px] flex flex-col justify-between gap-[24px]">
             {/* 일별 가격 리스트 컴포넌트 */}
-            <div className="text-[24px] font-semibold">일별 시세</div>
-            <div className="flex justify-between border-b border-tertiary pb-[8px] text-text-primary">
+            <div className="text-[24px] text-foreground font-semibold">일별 시세</div>
+            <div className="flex justify-between border-b border-tertiary pb-[8px] text-foreground">
                 <span>날짜</span>
                 <span className="ml-[60px]">종가</span>
                 <span>등락률</span>

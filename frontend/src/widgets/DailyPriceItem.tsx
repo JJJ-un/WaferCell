@@ -10,7 +10,7 @@ export interface DailyPrice {
 
 export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
     return (
-        <div className="flex justify-between text-text-primary">
+        <div className="flex justify-between text-foreground">
             <div>{dailyPrice.date}</div>
             <div className="font-semibold"> {dailyPrice.price}</div>
             <div>{dailyPrice.change}</div>

@@ -1,13 +1,12 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { Heaader } from '@/shared/ui/header/Header'
 import { NewsFeed } from '../widgets/news-feed/NewsFeed'
 
 export const Route = createRootRoute({
   component: () => (
     <>
-      <div className="flex flex-col bg-dashboard-bg text-ink-main min-h-screen">
-        <div className="h-16 bg-primary flex items-center p-[24px] top-0 sticky z-[200]">
-           <span className='text-[20px] font-semibold text-text-primary '>WaferCell</span>
-        </div>
+      <div className="flex flex-col bg-background text-ink-main min-h-screen">
+        <Heaader />
         <div className="flex">
           <div className="flex-1">
             <Outlet />
