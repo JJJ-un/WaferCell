@@ -5,6 +5,7 @@ import { DashBoard } from './pages/DashBoard'
 import { StompProvider } from './shared/model/contexts/StompContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; 
 import { NewsFeed } from './widgets/news-feed/NewsFeed'
+import { Chart } from './pages/Chart'
 
 const WEBSOCKET_URL = import.meta.env.VITE_WS_URL;
 
@@ -27,9 +28,8 @@ createRoot(document.getElementById('root')!).render(
              <span className='text-[20px] font-semibold text-text-primary '>WaferCell</span>
           </div>
           <div className="flex">
-            <DashBoard/>
+            <Chart/>
             <div className="w-[340px] bg-primary flex flex-col items-center h-[800px] p-6 mt-[24px] rounded-xl">
-              <div className="h-[250px]">여기에 AI 기능 들어갈듯</div>
               <NewsFeed/>
             </div>
           </div>
