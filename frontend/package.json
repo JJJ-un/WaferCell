@@ -13,9 +13,11 @@
   "dependencies": {
     "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.95.2",
+    "@tanstack/react-router": "^1.168.15",
     "axios": "^1.13.6",
     "d3": "^7.9.0",
     "d3-voronoi-treemap": "^1.1.2",
+    "lightweight-charts": "^5.1.0",
     "lodash": "^4.17.23",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -25,6 +27,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.2.2",
+    "@tanstack/router-plugin": "^1.167.14",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

@@ -1,0 +1,1 @@
+export type ChartPeriod = '3개월' | '1년' | '3년' | '10년';

@@ -37,7 +37,7 @@ export const TradingVolumeIndicator = () => {
           <span className="text-[9px] text-slate-500 font-bold">{hoveredTicker || '선택 없음'}</span>
         </div>
         <div 
-          className="text-2xl font-black tracking-tighter text-slate-100 transition-all duration-500"
+          className="text-2xl font-black tracking-tighter text-foreground transition-all duration-500"
           style={{ 
             textShadow: isActive ? `0 0 20px ${statusColor}44` : 'none'
           }}

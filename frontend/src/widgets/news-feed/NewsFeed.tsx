@@ -38,9 +38,9 @@ export const NewsFeed = () => {
   if (isLoading) return <div className="flex items-center justify-center w-full p-4 text-slate-400">뉴스를 불러오는 중...</div>;
 
   return (
-    <div className="flex flex-col h-[600px] w-full rounded-xl shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[600px] w-full rounded-xl overflow-hidden">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-text-tertiary text-[24px] flex items-center gap-2">
+        <h3 className="font-bold text-foreground text-[24px] flex items-center gap-2">
           실시간 해외 속보
         </h3>
         <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
@@ -54,11 +54,11 @@ export const NewsFeed = () => {
               onClick={() => handleNewsClick(news.title)}
               className="py-4 cursor-pointer group"
             >
-              <div className="text-sm font-semibold text-text-primary group-hover:text-trend-down-500 transition-colors duration-200 line-clamp-2 mb-2">
+              <div className="text-sm font-semibold text-foreground group-hover:text-trend-down-500 transition-colors duration-200 line-clamp-2 mb-2">
                 {news.title}
               </div>
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
-                <span className="font-medium text-slate-500">{news.source}</span>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-secondary">
+                <span className="font-medium text-secondary">{news.source}</span>
                 <span>•</span>
                 <span>{news.time.substring(0, 2)}:{news.time.substring(2, 4)}</span>
               </div>
