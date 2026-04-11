@@ -20,7 +20,7 @@ export const SimpleChart = ({ chartData }: SimpleChartProps) => {
     // createChart(container, options) → 차트 배경 생성 (지정 DOM 요소)
     chartApiRef.current = createChart(chartContainerRef.current, { 
       width: 1100,
-      height: 600,
+      height: 730,
       layout: {
         background: { type: ColorType.Solid, color: '#ffffff' }, // 배경색
         textColor: '#333', // 글자색
@@ -69,6 +69,10 @@ export const SimpleChart = ({ chartData }: SimpleChartProps) => {
   
 
   return (
-    <div ref={chartContainerRef} style={{ width: '100%', height: '300px' }} />
+    <div ref={chartContainerRef} className="border rounded-[10px] overflow-hidden [&_a]:hidden" />
   );
+  
 }
+
+
+
