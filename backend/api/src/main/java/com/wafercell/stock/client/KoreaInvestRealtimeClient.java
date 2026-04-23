@@ -3,9 +3,8 @@ package com.wafercell.stock.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafercell.global.properties.KoreaInvestProperties;
 import com.wafercell.stock.dto.StockUpdate;
-import com.wafercell.stock.service.StockService;
+import com.wafercell.stock.service.application.StockService;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -15,6 +14,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
@@ -34,6 +34,7 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     private final KoreaInvestProperties properties;
     private final AuthClient authClient;
     private final SimpMessagingTemplate messagingTemplate;
+    // 이거 메인 서비스 로직인데 알차게 쓰이고 있다.
     private final StockService stockService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -43,7 +44,6 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     
     private WebSocketSession session;
 
-    // 순환 참조 방지를 위해 @Lazy 사용
     public KoreaInvestRealtimeClient(KoreaInvestProperties properties, 
                                      AuthClient authClient, 
                                      SimpMessagingTemplate messagingTemplate, 
@@ -81,7 +81,7 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
                     this.session = newSession;
                     isConnecting.set(false);
                     log.info("✅ 실시간 서버 연결 성공: {}", wsUrl);
-                    // 연결 성공 후 StockService에 알려서 구독 시작
+                    // 연결 성공 후 모든 종목 구독
                     stockService.subscribeAllStocks();
                 }).exceptionally(ex -> {
                     isConnecting.set(false);
@@ -114,9 +114,6 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
         scheduleReconnect();
     }
 
-    /**
-     * 특정 종목 구독 요청
-     */
     public void subscribe(String exchangeCode, String ticker) {
         if (session == null || !session.isOpen()) {
             log.warn("세션이 닫혀있어 [{}] 구독 요청을 보낼 수 없습니다.", ticker);
@@ -154,57 +151,89 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
         log.info("웹소켓 연결 확립됨.");
     }
 
+    // 한투 실시간 데이터 규격 관련 상수
+    private static final String PINGPONG_PAYLOAD = "PINGPONG";
+    private static final String STOCK_TR_ID = "0|HDFSCNT0";
+
+    // 인덱스 상수 (HDFSCNT0 기준)
+    private static final int INDEX_TICKER = 1;
+    private static final int INDEX_TIMESTAMP = 5;
+    private static final int INDEX_HIGH_PRICE = 9;
+    private static final int INDEX_LOW_PRICE = 10;
+    private static final int INDEX_PRICE = 11;
+    private static final int INDEX_RATE = 14;
+    private static final int INDEX_VOLUME = 20;
+    private static final int INDEX_TRADING_VALUE = 21;
+    private static final int INDEX_STRENGTH = 24;
+    private static final int MIN_SUBPARTS_LENGTH = 25;
+
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         String payload = message.getPayload();
         
         try {
-            if (payload.contains("PINGPONG")) {
-                session.sendMessage(new TextMessage(payload));
+            // 1. 하트비트(연결 유지) 처리
+            if (isHeartbeat(payload)) {
+                handleHeartbeat(session, payload);
                 return;
             }
 
-            if (!payload.startsWith("0|HDFSCNT0")) return;
-
-            String[] pipeParts = payload.split("\\|");
-            if (pipeParts.length < 4) return;
-
-            String dataPart = pipeParts[3];
-            String[] subParts = dataPart.split("\\^");
-
-            if (subParts.length > 24) {
-                String ticker = subParts[1];      // 종목코드 (SYMB)
-                String timestamp = subParts[5];   // 현지시간 (XHMS)
-                String highPrice = subParts[9];   // 고가 (HIGH)
-                String lowPrice = subParts[10];   // 저가 (LOW)
-                String price = subParts[11];      // 현재가 (LAST)
-                String rate = subParts[14];       // 등락률 (RATE)
-                String volume = subParts[20];     // 누적 거래량 (TVOL)
-                
-                // 추가 지표 파싱
-                String tradingValue = subParts[21]; // TAMT (거래대금)
-                String strength = subParts[24];     // STRN (체결강도)
-                
-                log.info("⚡ [실시간] {}: {} ({}%) | 고가:{} | 저가:{} | 거래량:{} | 체결강도:{}", 
-                        ticker, price, rate, highPrice, lowPrice, volume, strength);
-
-                StockUpdate update = StockUpdate.builder()
-                        .ticker(ticker)
-                        .price(price)
-                        .highPrice(highPrice)
-                        .lowPrice(lowPrice)
-                        .rate(rate)
-                        .volume(volume) 
-                        .timestamp(timestamp)
-                        .tradingValue(tradingValue)
-                        .strength(strength)
-                        .build();
-
-                stockService.updateStockCache(update);
-                messagingTemplate.convertAndSend("/topic/stocks", update);
+            // 2. 실시간 주가 데이터 여부 확인
+            if (!isStockData(payload)) {
+                return;
             }
+
+            // 3. 데이터 파싱 및 전파 처리
+            processStockData(payload);
+
         } catch (Exception e) {
-            log.error("데이터 처리 오류: {}", e.getMessage());
+            log.error("실시간 데이터 처리 중 오류 발생: {}", e.getMessage(), e);
         }
+    }
+
+    private boolean isHeartbeat(String payload) {
+        return payload.contains(PINGPONG_PAYLOAD);
+    }
+
+    private void handleHeartbeat(WebSocketSession session, String payload) throws Exception {
+        session.sendMessage(new TextMessage(payload));
+    }
+
+    private boolean isStockData(String payload) {
+        return payload.startsWith(STOCK_TR_ID);
+    }
+
+    private void processStockData(String payload) {
+        String[] pipeParts = payload.split("\\|");
+        if (pipeParts.length < 4) return;
+
+        String dataPart = pipeParts[3];
+        // 여기까진 한투에서 받아온 실시간 데이터
+        String[] subParts = dataPart.split("\\^");
+
+        if (subParts.length < MIN_SUBPARTS_LENGTH) {
+            log.warn("유효하지 않은 데이터 길이: {}", subParts.length);
+            return;
+        }
+
+        // 내부에서 다루기 쉬운 형태로 전환
+        StockUpdate update = buildStockUpdate(subParts);
+
+        stockService.updateStockCache(update);
+        messagingTemplate.convertAndSend("/topic/stocks", update);
+    }
+
+    private StockUpdate buildStockUpdate(String[] subParts) {
+        return StockUpdate.builder()
+                .ticker(subParts[INDEX_TICKER])
+                .price(subParts[INDEX_PRICE])
+                .highPrice(subParts[INDEX_HIGH_PRICE])
+                .lowPrice(subParts[INDEX_LOW_PRICE])
+                .rate(subParts[INDEX_RATE])
+                .volume(subParts[INDEX_VOLUME])
+                .timestamp(subParts[INDEX_TIMESTAMP])
+                .tradingValue(subParts[INDEX_TRADING_VALUE])
+                .strength(subParts[INDEX_STRENGTH])
+                .build();
     }
 }

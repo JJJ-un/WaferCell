@@ -14,52 +14,37 @@ import lombok.*;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StockDetailDto {
 
-    /** 종목 명칭 (예: NVIDIA) */
     private String name;
-
-    /** 종목 티커 (예: NVDA) */
     private String ticker;
-
-    /** 소속 섹터 (예: Foundry, Memory) */
     private String sector;
-
-    /** 시가총액 */
     private Double marketCap;
-
-    /** 등락률 */
     private Double changePercent;
-
-    /** 현재가 */
     private Double price;
-
-    /** 당일 고가 */
     private Double highPrice;
-
-    /** 당일 저가 */
     private Double lowPrice;
-
-    /** 전일 종가 */
     private Double prevClose;
-
-    /** 거래량 */
     private Long volume;
-
-    // --- 추가 실시간 지표 ---
-    /** 거래대금 */
     private Double tradingValue;
-
-    /** 체결강도 */
     private Double strength;
-
-    /** SOXX 대비 상대 변동률 (stock.changePercent - soxx.changePercent) */
     private Double relativeChange;
-
-    /** RSI (Relative Strength Index) - 14일 기준 */
     private Double rsi;
-
-    /** 최근 20일 평균 일일 거래대금 */
     private Double averageTradingValue;
-
-    /** 평소 거래대금 대비 현재 비율 (현재 / 20일 평균 * 100) */
     private Double tradingValueRatio;
+
+    /**
+     * 실시간 업데이트 메시지를 기반으로 데이터를 갱신합니다.
+     */
+    public void updateFromSocket(StockUpdate update, double newRsi, double newTamtRatio) {
+        try {
+            this.price = Double.parseDouble(update.getPrice());
+            this.changePercent = Double.parseDouble(update.getRate());
+            this.volume = (long) Double.parseDouble(update.getVolume());
+            this.highPrice = Double.parseDouble(update.getHighPrice());
+            this.lowPrice = Double.parseDouble(update.getLowPrice());
+            this.tradingValue = update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0;
+            this.strength = update.getStrength() != null ? Double.parseDouble(update.getStrength()) : 100.0;
+            this.rsi = newRsi;
+            this.tradingValueRatio = newTamtRatio;
+        } catch (Exception ignored) {}
+    }
 }
