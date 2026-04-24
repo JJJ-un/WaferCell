@@ -1,5 +1,6 @@
 package com.wafercell.stock.service.domain;
 
+import com.wafercell.stock.dto.StockDetailDto;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
@@ -7,7 +8,7 @@ import java.util.List;
 public class StockIndicatorCalculator {
     public double calculateRSI(List<Double> prices, double currentPrice) {
         if (prices == null || prices.size() < 14) return 50.0;
-        int startIdx = Math.max(0, prices.size() - 13);
+        int startIdx = Math.max(0, prices.size() - 14);
         List<Double> targetPrices = prices.subList(startIdx, prices.size());
         double au = 0.0, ad = 0.0;
         double prev = targetPrices.get(0);
@@ -30,7 +31,7 @@ public class StockIndicatorCalculator {
         return avgTamt == 0 ? 0 : (currentTamt / avgTamt) * 100;
     }
 
-    public double calculateWeightedAverageChange(double totalMarketCap, java.util.List<com.wafercell.stock.dto.StockDetailDto> stocks) {
+    public double calculateWeightedAverageChange(double totalMarketCap, List<StockDetailDto> stocks) {
         if (totalMarketCap <= 0) return 0.0;
         return stocks.stream()
                 .mapToDouble(s -> s.getChangePercent() * (s.getMarketCap() / totalMarketCap))
