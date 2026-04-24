@@ -43,17 +43,17 @@ public class StockAnalysisService {
 
     private void applyRelativeChange(List<StockDetailDto> stocks) {
         double benchmarkRate = stocks.stream()
-                .filter(s -> BENCHMARK_TICKER.equals(s.getTicker()))
+                .filter(stock -> BENCHMARK_TICKER.equals(stock.getTicker()))
                 .mapToDouble(StockDetailDto::getChangePercent)
                 .findFirst()
                 .orElse(0.0);
 
-        stocks.forEach(s -> s.setRelativeChange(s.getChangePercent() - benchmarkRate));
+        stocks.forEach(stock -> stock.setRelativeChange(stock.getChangePercent() - benchmarkRate));
     }
 
     private StockSummaryDto calculateSectorSummary(String sectorName, List<StockDetailDto> sectorStocks) {
         double totalMarketCap = sectorStocks.stream().mapToDouble(StockDetailDto::getMarketCap).sum();
-        long totalVolume = sectorStocks.stream().mapToLong(s -> s.getVolume() != null ? s.getVolume() : 0).sum();
+        long totalVolume = sectorStocks.stream().mapToLong(stock -> stock.getVolume() != null ? stock.getVolume() : 0).sum();
         
         double weightedAvgChange = calculator.calculateWeightedAverageChange(totalMarketCap, sectorStocks);
 

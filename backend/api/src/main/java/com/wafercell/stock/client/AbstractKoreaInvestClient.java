@@ -1,6 +1,5 @@
 package com.wafercell.stock.client;
 
-import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.global.properties.KoreaInvestProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

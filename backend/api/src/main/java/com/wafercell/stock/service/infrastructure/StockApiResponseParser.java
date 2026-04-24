@@ -17,6 +17,8 @@ public class StockApiResponseParser {
                 .basePrice(parseSafeDouble(raw.getBasePrice()))
                 .highPrice(parseSafeDouble(raw.getHighPrice()))
                 .lowPrice(parseSafeDouble(raw.getLowPrice()))
+                .changeAmount(parseSafeDouble(raw.getChangeAmount()))
+                .changeRate(parseSafeDouble(raw.getChangeRate()))
                 .volume(parseSafeLong(raw.getVolume()))
                 .tradingValue(parseSafeDouble(raw.getTradingValue()))
                 .build();

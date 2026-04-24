@@ -11,15 +11,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class StockSyncScheduler {
-    private final StockService stockService;
+    private final StockDataSyncService stockDataSyncService;
     @EventListener(ApplicationReadyEvent.class)
     public void onStart() {
         log.info("애플리케이션 시작: 초기 주식 데이터 동기화 진행");
-        stockService.refreshAllStockData();
+        stockDataSyncService.refreshAllStockData();
     }
     @Scheduled(cron = "0 0 * * * *")
     public void hourlyRefresh() {
         log.info("정기 주식 데이터 최신화 스케줄러 실행");
-        stockService.refreshAllStockData();
+        stockDataSyncService.refreshAllStockData();
     }
 }

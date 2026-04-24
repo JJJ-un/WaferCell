@@ -25,7 +25,7 @@ public class StockDetailRaw {
     @JsonProperty("t_avls")
     private String marketCap;
 
-    @JsonProperty("vol")
+    @JsonProperty("tvol")
     private String volume;
 
     @JsonProperty("high")

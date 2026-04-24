@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+// 이 이노테이션 없다면
 @Component
 public class StockDetailStore {
     private final Map<String, StockDetailDto> stockCache = new ConcurrentHashMap<>();

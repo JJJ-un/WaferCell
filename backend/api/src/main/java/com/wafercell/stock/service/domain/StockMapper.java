@@ -13,14 +13,14 @@ public class StockMapper {
     private final StockIndicatorCalculator calculator;
 
     public StockDetailDto toDetailDto(Stock stock, StockApiResponse response, List<Double> historicalPrices, List<Double> historicalTamts) {
+        // RSI, 평균 거래대금, 거래대금 비율 계산
         double rsi = calculator.calculateRSI(historicalPrices, response.getLastPrice());
         double avgTamt = calculator.calculateAverageTradingValue(historicalTamts);
         double tamtRatio = calculator.calculateTradingValueRatio(response.getTradingValue(), avgTamt);
-        double rate = (response.getBasePrice() == 0) ? 0 : ((response.getLastPrice() - response.getBasePrice()) / response.getBasePrice()) * 100;
 
         return StockDetailDto.builder()
                 .name(stock.getName()).ticker(stock.getTicker()).sector(stock.getSector())
-                .marketCap(response.getMarketCap()).changePercent(rate).price(response.getLastPrice())
+                .marketCap(response.getMarketCap()).changePercent(response.getChangeRate()).price(response.getLastPrice())
                 .highPrice(response.getHighPrice()).lowPrice(response.getLowPrice())
                 .prevClose(response.getBasePrice()).volume(response.getVolume())
                 .tradingValue(response.getTradingValue()).strength(100.0)

@@ -3,6 +3,7 @@ package com.wafercell.stock.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafercell.global.properties.KoreaInvestProperties;
 import com.wafercell.stock.dto.StockUpdate;
+import com.wafercell.stock.service.application.StockDataSyncService;
 import com.wafercell.stock.service.application.StockService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,6 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
@@ -34,8 +34,8 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     private final KoreaInvestProperties properties;
     private final AuthClient authClient;
     private final SimpMessagingTemplate messagingTemplate;
-    // 이거 메인 서비스 로직인데 알차게 쓰이고 있다.
     private final StockService stockService;
+    private final StockDataSyncService stockDataSyncService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -47,11 +47,13 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     public KoreaInvestRealtimeClient(KoreaInvestProperties properties, 
                                      AuthClient authClient, 
                                      SimpMessagingTemplate messagingTemplate, 
-                                     @Lazy StockService stockService) {
+                                     @Lazy StockService stockService,
+                                     @Lazy StockDataSyncService stockDataSyncService) {
         this.properties = properties;
         this.authClient = authClient;
         this.messagingTemplate = messagingTemplate;
         this.stockService = stockService;
+        this.stockDataSyncService = stockDataSyncService;
     }
 
     @PostConstruct
@@ -82,7 +84,7 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
                     isConnecting.set(false);
                     log.info("✅ 실시간 서버 연결 성공: {}", wsUrl);
                     // 연결 성공 후 모든 종목 구독
-                    stockService.subscribeAllStocks();
+                    stockDataSyncService.subscribeAllStocks();
                 }).exceptionally(ex -> {
                     isConnecting.set(false);
                     log.error("❌ 실시간 서버 연결 실패: {}", ex.getMessage());
