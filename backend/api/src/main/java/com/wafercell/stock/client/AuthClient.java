@@ -1,6 +1,8 @@
 package com.wafercell.stock.client;
 
 import com.wafercell.global.properties.KoreaInvestProperties;
+import com.wafercell.stock.dto.ApprovalKeyResponse;
+import com.wafercell.stock.dto.TokenResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -39,20 +41,19 @@ public class AuthClient {
                     "appsecret", properties.getSecret()
             );
 
-            Map response = restClient.post()
+            TokenResponse response = restClient.post()
                     .uri(properties.getUrl() + "/oauth2/tokenP")
                     .body(body)
                     .retrieve()
-                    .body(Map.class);
+                    .body(TokenResponse.class);
 
-            if (response == null || !response.containsKey("access_token")) {
+            if (response == null || response.getAccessToken() == null) {
                 log.error("Access Token 발급 실패: {}", response);
                 throw new RuntimeException("한국투자증권 Access Token 발급 실패");
             }
 
-            String token = (String) response.get("access_token");
-            accessTokenCache.set(token);
-            return token;
+            accessTokenCache.set(response.getAccessToken());
+            return response.getAccessToken();
         }
     }
 
@@ -74,20 +75,19 @@ public class AuthClient {
                     "secretkey", properties.getSecret()
             );
 
-            Map response = restClient.post()
+            ApprovalKeyResponse response = restClient.post()
                     .uri(properties.getUrl() + "/oauth2/Approval")
                     .body(body)
                     .retrieve()
-                    .body(Map.class);
+                    .body(ApprovalKeyResponse.class);
 
-            if (response == null || !response.containsKey("approval_key")) {
+            if (response == null || response.getApprovalKey() == null) {
                 log.error("Approval Key 발급 실패: {}", response);
                 throw new RuntimeException("한국투자증권 Approval Key 발급 실패");
             }
 
-            String key = (String) response.get("approval_key");
-            approvalKeyCache.set(key);
-            return key;
+            approvalKeyCache.set(response.getApprovalKey());
+            return response.getApprovalKey();
         }
     }
 }
