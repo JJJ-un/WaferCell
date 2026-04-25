@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StockDataSyncService {
     private final StockRepository stockRepository;
-    private final KoreaInvestRealtimeClient realtimeClient;
+    private final StockSubscriptionManager subscriptionManager;
     private final StockDetailStore stockDetailStore;
     private final HistoricalPriceStore historicalPriceStore;
     private final HistoricalTradingValueStore historicalTradingValueStore;
@@ -61,11 +61,6 @@ public class StockDataSyncService {
             }
         }
         log.info("모든 주식 데이터 최신화 완료");
-        subscribeAllStocks();
-    }
-
-    public void subscribeAllStocks() {
-        stockRepository.findAll().forEach(stock -> 
-            realtimeClient.subscribe(stock.getExchange(), stock.getTicker()));
+        subscriptionManager.subscribeAllStocks(allStocks);
     }
 }

@@ -3,12 +3,11 @@ package com.wafercell.stock.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafercell.global.properties.KoreaInvestProperties;
 import com.wafercell.stock.dto.StockUpdate;
-import com.wafercell.stock.service.application.StockDataSyncService;
-import com.wafercell.stock.service.application.StockService;
+import com.wafercell.stock.event.RealtimeServerConnectedEvent;
+import com.wafercell.stock.event.StockUpdateEvent;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -33,9 +32,7 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
 
     private final KoreaInvestProperties properties;
     private final AuthClient authClient;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final StockService stockService;
-    private final StockDataSyncService stockDataSyncService;
+    private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -46,14 +43,10 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
 
     public KoreaInvestRealtimeClient(KoreaInvestProperties properties, 
                                      AuthClient authClient, 
-                                     SimpMessagingTemplate messagingTemplate, 
-                                     @Lazy StockService stockService,
-                                     @Lazy StockDataSyncService stockDataSyncService) {
+                                     ApplicationEventPublisher eventPublisher) {
         this.properties = properties;
         this.authClient = authClient;
-        this.messagingTemplate = messagingTemplate;
-        this.stockService = stockService;
-        this.stockDataSyncService = stockDataSyncService;
+        this.eventPublisher = eventPublisher;
     }
 
     @PostConstruct
@@ -83,8 +76,8 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
                     this.session = newSession;
                     isConnecting.set(false);
                     log.info("✅ 실시간 서버 연결 성공: {}", wsUrl);
-                    // 연결 성공 후 모든 종목 구독
-                    stockDataSyncService.subscribeAllStocks();
+                    // 연결 성공 이벤트 발행
+                    eventPublisher.publishEvent(new RealtimeServerConnectedEvent(this));
                 }).exceptionally(ex -> {
                     isConnecting.set(false);
                     log.error("❌ 실시간 서버 연결 실패: {}", ex.getMessage());
@@ -221,8 +214,8 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
         // 내부에서 다루기 쉬운 형태로 전환
         StockUpdate update = buildStockUpdate(subParts);
 
-        stockService.updateStockCache(update);
-        messagingTemplate.convertAndSend("/topic/stocks", update);
+        // 업데이트 이벤트 발행
+        eventPublisher.publishEvent(new StockUpdateEvent(this, update));
     }
 
     private StockUpdate buildStockUpdate(String[] subParts) {
