@@ -20,11 +20,11 @@ public class StockAnalysisService {
     private static final String MARKET_TOTAL_NAME = "반도체 전체";
 
     public StockHeatmapResponse generateMarketAnalysis(List<StockDetailDto> allStocks) {
-        // 1. 벤치마크 대비 상대 수익률 계산 (Policy)
-        applyRelativeChange(allStocks);
-
+        // 1. 벤치마크 대비 상대 수익률 계산 (Policy) => 현재 애매한 부분이 많은 지표이다. 
+        List<StockDetailDto> analyzedStocks = applyRelativeChange(allStocks);
+        
         // 2. 섹터별 그룹화 및 요약 (Aggregation)
-        Map<String, List<StockDetailDto>> groupedBySector = allStocks.stream()
+        Map<String, List<StockDetailDto>> groupedBySector = analyzedStocks.stream()
                 .collect(Collectors.groupingBy(StockDetailDto::getSector));
 
         List<StockSummaryDto> sectorSummaries = groupedBySector.entrySet().stream()
@@ -37,18 +37,21 @@ public class StockAnalysisService {
         return StockHeatmapResponse.builder()
                 .overall(overallSummary)
                 .sectors(sectorSummaries)
-                .stocks(allStocks)
+                .stocks(analyzedStocks)
                 .build();
     }
 
-    private void applyRelativeChange(List<StockDetailDto> stocks) {
+    private List<StockDetailDto> applyRelativeChange(List<StockDetailDto> stocks) {
         double benchmarkRate = stocks.stream()
                 .filter(stock -> BENCHMARK_TICKER.equals(stock.getTicker()))
                 .mapToDouble(StockDetailDto::getChangePercent)
                 .findFirst()
                 .orElse(0.0);
-
-        stocks.forEach(stock -> stock.setRelativeChange(stock.getChangePercent() - benchmarkRate));
+    
+        // 2. forEach(수정) 대신 map(변환)을 사용
+        return stocks.stream()
+                .map(stock -> stock.calculateRelativeChange(benchmarkRate)) // 새 객체 반환받음
+                .collect(Collectors.toList()); // 새 객체들을 새 리스트에 담음
     }
 
     private StockSummaryDto calculateSectorSummary(String sectorName, List<StockDetailDto> sectorStocks) {
@@ -60,6 +63,7 @@ public class StockAnalysisService {
         return StockSummaryDto.builder()
                 .name(sectorName)
                 .marketCap(totalMarketCap)
+                // 섹터의 등락률
                 .changePercent(weightedAvgChange)
                 .build();
     }

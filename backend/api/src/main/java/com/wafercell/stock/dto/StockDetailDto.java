@@ -8,7 +8,7 @@ import lombok.*;
  */
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -26,11 +26,20 @@ public class StockDetailDto {
     private Long volume;
     private Double tradingValue;
     private Double strength;
+    // 벤치마크 대비 상대 수익률
     private Double relativeChange;
     private Double rsi;
     private Double averageTradingValue;
     private Double tradingValueRatio;
 
+    /**
+     * 벤치마크 수익률을 바탕으로 상대 수익률이 계산된 새로운 DTO 인스턴스를 반환합니다.
+     */
+    public StockDetailDto calculateRelativeChange(double benchmarkRate) {
+        return this.toBuilder()
+                .relativeChange(this.changePercent - benchmarkRate)
+                .build();
+    }
     /**
      * 실시간 업데이트 메시지를 기반으로 데이터를 갱신합니다.
      */
