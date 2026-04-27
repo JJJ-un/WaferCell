@@ -1,4 +1,4 @@
-package com.wafercell.stock.dto;
+package com.wafercell.stock.dto.response;
 
 import lombok.*;
 

@@ -1,6 +1,6 @@
 package com.wafercell.stock.event;
 
-import com.wafercell.stock.dto.StockUpdate;
+import com.wafercell.stock.dto.response.StockUpdate;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

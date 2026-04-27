@@ -1,5 +1,5 @@
 package com.wafercell.stock.service.application;
-import com.wafercell.stock.dto.*;
+import com.wafercell.stock.dto.response.*;
 import com.wafercell.stock.service.domain.StockAnalysisService;
 import com.wafercell.stock.service.storage.StockDetailStore;
 import lombok.RequiredArgsConstructor;

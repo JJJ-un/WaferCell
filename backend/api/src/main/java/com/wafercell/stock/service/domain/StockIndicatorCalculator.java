@@ -1,6 +1,6 @@
 package com.wafercell.stock.service.domain;
 
-import com.wafercell.stock.dto.StockDetailDto;
+import com.wafercell.stock.dto.response.StockDetailDto;
 import org.springframework.stereotype.Component;
 import java.util.List;
 

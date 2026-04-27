@@ -2,7 +2,7 @@ package com.wafercell.stock.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wafercell.global.properties.KoreaInvestProperties;
-import com.wafercell.stock.dto.StockUpdate;
+import com.wafercell.stock.dto.response.StockUpdate;
 import com.wafercell.stock.event.RealtimeServerConnectedEvent;
 import com.wafercell.stock.event.StockUpdateEvent;
 import jakarta.annotation.PostConstruct;
@@ -64,7 +64,7 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
                 String targetUrl = properties.getWsUrl() != null ? properties.getWsUrl() : properties.getUrl();
                 String scheme = targetUrl.contains("21000") || targetUrl.contains("31000") ? "ws" : "wss";
                 
-                String builtUrl = UriComponentsBuilder.fromHttpUrl(targetUrl.replace("ws://", "http://"))
+                String builtUrl = UriComponentsBuilder.fromUriString(targetUrl.replace("ws://", "http://"))
                         .scheme(scheme)
                         .build()
                         .toUriString();

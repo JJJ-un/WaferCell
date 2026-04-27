@@ -1,6 +1,6 @@
 package com.wafercell.stock.service.infrastructure;
 
-import com.wafercell.stock.dto.StockApiResponse;
+import com.wafercell.stock.dto.response.StockApiResponse;
 import com.wafercell.stock.entity.Stock;
 import java.util.List;
 import java.util.Map;

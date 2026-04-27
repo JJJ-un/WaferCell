@@ -1,8 +1,8 @@
 package com.wafercell.stock.client;
 
 import com.wafercell.global.properties.KoreaInvestProperties;
-import com.wafercell.stock.dto.ApprovalKeyResponse;
-import com.wafercell.stock.dto.TokenResponse;
+import com.wafercell.stock.dto.response.ApprovalKeyResponse;
+import com.wafercell.stock.dto.response.TokenResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

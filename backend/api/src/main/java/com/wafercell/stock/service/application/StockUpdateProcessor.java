@@ -1,7 +1,7 @@
 package com.wafercell.stock.service.application;
 
-import com.wafercell.stock.dto.StockDetailDto;
-import com.wafercell.stock.dto.StockUpdate;
+import com.wafercell.stock.dto.response.StockDetailDto;
+import com.wafercell.stock.dto.response.StockUpdate;
 import com.wafercell.stock.service.domain.StockIndicatorCalculator;
 import com.wafercell.stock.service.storage.HistoricalPriceStore;
 import com.wafercell.stock.service.storage.StockDetailStore;

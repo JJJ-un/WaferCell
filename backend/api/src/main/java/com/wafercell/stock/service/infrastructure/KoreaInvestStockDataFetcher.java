@@ -2,9 +2,9 @@ package com.wafercell.stock.service.infrastructure;
 
 import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.stock.client.KoreaInvestStockClient;
-import com.wafercell.stock.dto.StockDailyPriceRaw;
-import com.wafercell.stock.dto.StockDetailRaw;
-import com.wafercell.stock.dto.StockApiResponse;
+import com.wafercell.stock.dto.response.StockDailyPriceRaw;
+import com.wafercell.stock.dto.response.StockDetailRaw;
+import com.wafercell.stock.dto.response.StockApiResponse;
 import com.wafercell.stock.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

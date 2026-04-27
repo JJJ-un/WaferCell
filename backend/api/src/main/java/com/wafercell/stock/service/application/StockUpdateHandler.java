@@ -1,7 +1,6 @@
 package com.wafercell.stock.service.application;
 
 import com.wafercell.stock.event.StockUpdateEvent;
-import com.wafercell.stock.service.application.StockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

@@ -33,14 +33,6 @@ public class Stock extends BaseTimeEntity {
     @Column(nullable = false)
     private String sector;      // 세부 공정 섹터 (예: 팹리스, 파운드리, 소부장 등)
 
-    @Column
-    private Double marketCap;   // 시가총액 (단위: 백만 달러)
-
-    @Column
-    private Double currentPrice; // 현재가
-
-    @Column
-    private Double rate;        // 등락률
 
     @Builder
     public Stock(String ticker, String name, String exchange, String sector, Double marketCap, Double currentPrice, Double rate) {
@@ -48,24 +40,6 @@ public class Stock extends BaseTimeEntity {
         this.name = name;
         this.exchange = exchange;
         this.sector = sector;
-        this.marketCap = marketCap;
-        this.currentPrice = currentPrice;
-        this.rate = rate;
     }
 
-    /**
-     * 실시간 주가 정보를 통합 업데이트합니다. (풍부한 도메인 모델 패턴)
-     */
-    public void updateRealtimeInfo(Double price, Double rate, Double marketCap) {
-        if (price != null) this.currentPrice = price;
-        if (rate != null) this.rate = rate;
-        if (marketCap != null) this.marketCap = marketCap;
-    }
-
-    /**
-     * 시가총액만 업데이트 (스케줄러 등에서 사용)
-     */
-    public void updateMarketCap(Double marketCap) {
-        this.marketCap = marketCap;
-    }
 }

@@ -1,6 +1,6 @@
 package com.wafercell.stock.controller;
 
-import com.wafercell.stock.dto.StockHeatmapResponse;
+import com.wafercell.stock.dto.response.StockHeatmapResponse;
 import com.wafercell.stock.service.application.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -2,8 +2,8 @@ package com.wafercell.stock.client;
 
 import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.global.properties.KoreaInvestProperties;
-import com.wafercell.stock.dto.StockDailyPriceRaw;
-import com.wafercell.stock.dto.StockDetailRaw;
+import com.wafercell.stock.dto.response.StockDailyPriceRaw;
+import com.wafercell.stock.dto.response.StockDetailRaw;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;

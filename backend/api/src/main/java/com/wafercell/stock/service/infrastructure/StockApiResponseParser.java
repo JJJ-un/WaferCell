@@ -1,7 +1,7 @@
 package com.wafercell.stock.service.infrastructure;
 
-import com.wafercell.stock.dto.StockDetailRaw;
-import com.wafercell.stock.dto.StockApiResponse;
+import com.wafercell.stock.dto.response.StockDetailRaw;
+import com.wafercell.stock.dto.response.StockApiResponse;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 

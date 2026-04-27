@@ -1,4 +1,4 @@
-package com.wafercell.stock.dto;
+package com.wafercell.stock.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;

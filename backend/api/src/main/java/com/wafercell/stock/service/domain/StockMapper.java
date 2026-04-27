@@ -1,7 +1,7 @@
 package com.wafercell.stock.service.domain;
 
-import com.wafercell.stock.dto.StockApiResponse;
-import com.wafercell.stock.dto.StockDetailDto;
+import com.wafercell.stock.dto.response.StockApiResponse;
+import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

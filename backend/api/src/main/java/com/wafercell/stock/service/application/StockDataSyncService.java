@@ -1,8 +1,7 @@
 package com.wafercell.stock.service.application;
 
-import com.wafercell.stock.client.KoreaInvestRealtimeClient;
-import com.wafercell.stock.dto.StockApiResponse;
-import com.wafercell.stock.dto.StockDetailDto;
+import com.wafercell.stock.dto.response.StockApiResponse;
+import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.entity.Stock;
 import com.wafercell.stock.repository.StockRepository;
 import com.wafercell.stock.service.domain.StockMapper;
