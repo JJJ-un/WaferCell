@@ -17,26 +17,26 @@ public class StockUpdateProcessor {
     private final HistoricalPriceStore historicalPriceStore;
     private final StockIndicatorCalculator calculator;
 
-    public void processUpdate(StockUpdate update) {
-        String ticker = update.getTicker();
-        StockDetailDto existing = stockDetailStore.get(ticker);
-        if (existing == null) return;
+    public void processUpdate(StockUpdate socketData) {
+        String ticker = socketData.getTicker();
+        StockDetailDto snapshot = stockDetailStore.get(ticker);
+        if (snapshot == null) return;
 
         try {
-            double newPrice = Double.parseDouble(update.getPrice());
-            double newTradingValue = update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0;
+            double newPrice = Double.parseDouble(socketData.getPrice());
+            double newTradingValue = socketData.getTradingValue() != null ? Double.parseDouble(socketData.getTradingValue()) : 0.0;
             
             // 1. 새 지표 계산
             double newRsi = calculator.calculateRSI(historicalPriceStore.get(ticker), newPrice);
-            double avgTamt = existing.getAverageTradingValue() != null ? existing.getAverageTradingValue() : 0.0;
+            double avgTamt = snapshot.getAverageTradingValue() != null ? snapshot.getAverageTradingValue() : 0.0;
             double newTamtRatio = calculator.calculateTradingValueRatio(newTradingValue, avgTamt);
 
-            // 2. DTO 스스로 업데이트 (중복 로직 제거)
-            existing.updateFromSocket(update, newRsi, newTamtRatio);
-            
+            // 2. 새로운 DTO 생성 (불변성 유지)
+            StockDetailDto updated = snapshot.updateFromSocket(socketData, newRsi, newTamtRatio);
+
             // 3. 웹소켓 응답용 RSI 세팅 및 캐시 저장
-            update.setRsi(String.format("%.2f", newRsi));
-            stockDetailStore.update(ticker, existing);
+            socketData.setRsi(String.format("%.2f", newRsi));
+            stockDetailStore.update(ticker, updated);
         } catch (Exception e) {
             log.error("실시간 업데이트 처리 중 오류 발생 ({}): {}", ticker, e.getMessage());
         }

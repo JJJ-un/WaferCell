@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Getter
-@Table(name = "stocks")
+@Table(name = "stocks", indexes = {
+        @Index(name = "idx_stock_ticker", columnList = "ticker")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Stock extends BaseTimeEntity {
 
@@ -35,7 +37,7 @@ public class Stock extends BaseTimeEntity {
 
 
     @Builder
-    public Stock(String ticker, String name, String exchange, String sector, Double marketCap, Double currentPrice, Double rate) {
+    public Stock(String ticker, String name, String exchange, String sector) {
         this.ticker = ticker;
         this.name = name;
         this.exchange = exchange;

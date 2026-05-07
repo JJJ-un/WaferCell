@@ -3,7 +3,6 @@ package com.wafercell.stock.service.storage;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class HistoricalPriceStore {

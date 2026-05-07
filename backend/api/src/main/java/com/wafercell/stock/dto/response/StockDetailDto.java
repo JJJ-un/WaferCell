@@ -41,19 +41,23 @@ public class StockDetailDto {
                 .build();
     }
     /**
-     * 실시간 업데이트 메시지를 기반으로 데이터를 갱신합니다.
+     * 실시간 업데이트 메시지를 기반으로 데이터를 갱신한 새로운 DTO 인스턴스를 반환합니다.
      */
-    public void updateFromSocket(StockUpdate update, double newRsi, double newTamtRatio) {
+    public StockDetailDto updateFromSocket(StockUpdate update, double newRsi, double newTamtRatio) {
         try {
-            this.price = Double.parseDouble(update.getPrice());
-            this.changePercent = Double.parseDouble(update.getRate());
-            this.volume = (long) Double.parseDouble(update.getVolume());
-            this.highPrice = Double.parseDouble(update.getHighPrice());
-            this.lowPrice = Double.parseDouble(update.getLowPrice());
-            this.tradingValue = update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0;
-            this.strength = update.getStrength() != null ? Double.parseDouble(update.getStrength()) : 100.0;
-            this.rsi = newRsi;
-            this.tradingValueRatio = newTamtRatio;
-        } catch (Exception ignored) {}
+            return this.toBuilder()
+                    .price(Double.parseDouble(update.getPrice()))
+                    .changePercent(Double.parseDouble(update.getRate()))
+                    .volume((long) Double.parseDouble(update.getVolume()))
+                    .highPrice(Double.parseDouble(update.getHighPrice()))
+                    .lowPrice(Double.parseDouble(update.getLowPrice()))
+                    .tradingValue(update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0)
+                    .strength(update.getStrength() != null ? Double.parseDouble(update.getStrength()) : 100.0)
+                    .rsi(newRsi)
+                    .tradingValueRatio(newTamtRatio)
+                    .build();
+        } catch (Exception e) {
+            return this;
+        }
     }
 }

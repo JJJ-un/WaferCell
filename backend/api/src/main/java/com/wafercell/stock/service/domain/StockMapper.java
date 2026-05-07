@@ -5,19 +5,12 @@ import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class StockMapper {
-    private final StockIndicatorCalculator calculator;
 
-    public StockDetailDto toDetailDto(Stock stock, StockApiResponse response, List<Double> historicalPrices, List<Double> historicalTamts) {
-        // RSI, 평균 거래대금, 거래대금 비율 계산
-        double rsi = calculator.calculateRSI(historicalPrices, response.getLastPrice());
-        double avgTamt = calculator.calculateAverageTradingValue(historicalTamts);
-        double tamtRatio = calculator.calculateTradingValueRatio(response.getTradingValue(), avgTamt);
-
+    public StockDetailDto toDetailDto(Stock stock, StockApiResponse response, double rsi, double avgTamt, double tamtRatio) {
         return StockDetailDto.builder()
                 .name(stock.getName()).ticker(stock.getTicker()).sector(stock.getSector())
                 .marketCap(response.getMarketCap()).changePercent(response.getChangeRate()).price(response.getLastPrice())
