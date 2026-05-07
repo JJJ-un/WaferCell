@@ -1,5 +1,6 @@
 package com.wafercell.stock.service.application;
 
+import com.wafercell.stock.dto.indicator.StockIndicators;
 import com.wafercell.stock.dto.response.StockApiResponse;
 import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.entity.Stock;
@@ -51,13 +52,19 @@ public class StockDataSyncService {
                 // 5. 과거 거래량 데이터 스토어에 저장
                 historicalTradingValueStore.update(ticker, tradingValues);
 
-                // 6. 지표 계산 (비즈니스 로직은 서비스에서 관리)
+                // 6. 지표 계산 및 캡슐화
                 double rsi = calculator.calculateRSI(prices, stockApiResponse.getLastPrice());
                 double avgTamt = calculator.calculateAverageTradingValue(tradingValues);
                 double tamtRatio = calculator.calculateTradingValueRatio(stockApiResponse.getTradingValue(), avgTamt);
 
+                StockIndicators indicators = StockIndicators.builder()
+                        .rsi(rsi)
+                        .averageTradingValue(avgTamt)
+                        .tradingValueRatio(tamtRatio)
+                        .build();
+
                 // 7. DB에서 가져온 기본 정보 + API에서 가져온 상세 정보 + 계산된 지표를 조합하여 DTO 생성
-                StockDetailDto node = stockMapper.toDetailDto(stock, stockApiResponse, rsi, avgTamt, tamtRatio);
+                StockDetailDto node = stockMapper.toDetailDto(stock, stockApiResponse, indicators);
                 
                 // 8. 캐시에 업데이트된 정보 저장
                 stockDetailStore.update(ticker, node);

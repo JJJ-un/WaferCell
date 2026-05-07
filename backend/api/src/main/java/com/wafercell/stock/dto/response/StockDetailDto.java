@@ -1,6 +1,7 @@
 package com.wafercell.stock.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wafercell.stock.dto.indicator.StockIndicators;
 import lombok.*;
 
 /**
@@ -43,7 +44,7 @@ public class StockDetailDto {
     /**
      * 실시간 업데이트 메시지를 기반으로 데이터를 갱신한 새로운 DTO 인스턴스를 반환합니다.
      */
-    public StockDetailDto updateFromSocket(StockUpdate update, double newRsi, double newTamtRatio) {
+    public StockDetailDto updateFromSocket(StockUpdate update, StockIndicators indicators) {
         try {
             return this.toBuilder()
                     .price(Double.parseDouble(update.getPrice()))
@@ -53,8 +54,8 @@ public class StockDetailDto {
                     .lowPrice(Double.parseDouble(update.getLowPrice()))
                     .tradingValue(update.getTradingValue() != null ? Double.parseDouble(update.getTradingValue()) : 0.0)
                     .strength(update.getStrength() != null ? Double.parseDouble(update.getStrength()) : 100.0)
-                    .rsi(newRsi)
-                    .tradingValueRatio(newTamtRatio)
+                    .rsi(indicators.getRsi())
+                    .tradingValueRatio(indicators.getTradingValueRatio())
                     .build();
         } catch (Exception e) {
             return this;

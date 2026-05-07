@@ -1,5 +1,6 @@
 package com.wafercell.stock.service.application;
 
+import com.wafercell.stock.dto.indicator.StockIndicators;
 import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.dto.response.StockUpdate;
 import com.wafercell.stock.service.domain.StockIndicatorCalculator;
@@ -31,8 +32,14 @@ public class StockUpdateProcessor {
             double avgTamt = snapshot.getAverageTradingValue() != null ? snapshot.getAverageTradingValue() : 0.0;
             double newTamtRatio = calculator.calculateTradingValueRatio(newTradingValue, avgTamt);
 
+            StockIndicators indicators = StockIndicators.builder()
+                    .rsi(newRsi)
+                    .averageTradingValue(avgTamt)
+                    .tradingValueRatio(newTamtRatio)
+                    .build();
+
             // 2. 새로운 DTO 생성 (불변성 유지)
-            StockDetailDto updated = snapshot.updateFromSocket(socketData, newRsi, newTamtRatio);
+            StockDetailDto updated = snapshot.updateFromSocket(socketData, indicators);
 
             // 3. 웹소켓 응답용 RSI 세팅 및 캐시 저장
             socketData.setRsi(String.format("%.2f", newRsi));

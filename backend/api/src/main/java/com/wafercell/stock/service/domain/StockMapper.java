@@ -1,5 +1,6 @@
 package com.wafercell.stock.service.domain;
 
+import com.wafercell.stock.dto.indicator.StockIndicators;
 import com.wafercell.stock.dto.response.StockApiResponse;
 import com.wafercell.stock.dto.response.StockDetailDto;
 import com.wafercell.stock.entity.Stock;
@@ -10,14 +11,20 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StockMapper {
 
-    public StockDetailDto toDetailDto(Stock stock, StockApiResponse response, double rsi, double avgTamt, double tamtRatio) {
+    /**
+     * 기본 정보, API 응답 데이터, 계산된 지표들을 조합하여 상세 DTO를 생성합니다.
+     */
+    public StockDetailDto toDetailDto(Stock stock, StockApiResponse response, StockIndicators indicators) {
         return StockDetailDto.builder()
                 .name(stock.getName()).ticker(stock.getTicker()).sector(stock.getSector())
                 .marketCap(response.getMarketCap()).changePercent(response.getChangeRate()).price(response.getLastPrice())
                 .highPrice(response.getHighPrice()).lowPrice(response.getLowPrice())
                 .prevClose(response.getBasePrice()).volume(response.getVolume())
                 .tradingValue(response.getTradingValue()).strength(100.0)
-                .rsi(rsi).averageTradingValue(avgTamt).tradingValueRatio(tamtRatio).build();
+                .rsi(indicators.getRsi())
+                .averageTradingValue(indicators.getAverageTradingValue())
+                .tradingValueRatio(indicators.getTradingValueRatio())
+                .build();
     }
 
     /**
