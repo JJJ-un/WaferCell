@@ -1,6 +1,6 @@
 package com.wafercell.stock.service.domain;
 
-import com.wafercell.stock.dto.response.StockDetailDto;
+import com.wafercell.stock.dto.response.StockSnapshot;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
@@ -31,10 +31,10 @@ public class StockIndicatorCalculator {
         return avgTamt == 0 ? 0 : (currentTamt / avgTamt) * 100;
     }
 
-    public double calculateWeightedAverageChange(double totalMarketCap, List<StockDetailDto> stocks) {
+    public double calculateWeightedAverageChangeSnapshot(double totalMarketCap, List<StockSnapshot> stocks) {
         if (totalMarketCap <= 0) return 0.0;
         return stocks.stream()
-                .mapToDouble(s -> s.getChangePercent() * (s.getMarketCap() / totalMarketCap))
+                .mapToDouble(s -> s.getPrice().getChangePercent() * (s.getBase().getMarketCap() / totalMarketCap))
                 .sum();
     }
 }

@@ -221,14 +221,30 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     private StockUpdate buildStockUpdate(String[] subParts) {
         return StockUpdate.builder()
                 .ticker(subParts[INDEX_TICKER])
-                .price(subParts[INDEX_PRICE])
-                .highPrice(subParts[INDEX_HIGH_PRICE])
-                .lowPrice(subParts[INDEX_LOW_PRICE])
-                .rate(subParts[INDEX_RATE])
-                .volume(subParts[INDEX_VOLUME])
-                .timestamp(subParts[INDEX_TIMESTAMP])
-                .tradingValue(subParts[INDEX_TRADING_VALUE])
-                .strength(subParts[INDEX_STRENGTH])
+                .price(parseSafeDouble(subParts[INDEX_PRICE]))
+                .highPrice(parseSafeDouble(subParts[INDEX_HIGH_PRICE]))
+                .lowPrice(parseSafeDouble(subParts[INDEX_LOW_PRICE]))
+                .changePercent(parseSafeDouble(subParts[INDEX_RATE]))
+                .volume(parseSafeLong(subParts[INDEX_VOLUME]))
+                .tradingValue(parseSafeDouble(subParts[INDEX_TRADING_VALUE]))
+                .strength(parseSafeDouble(subParts[INDEX_STRENGTH]))
                 .build();
+    }
+
+    private Double parseSafeDouble(String val) {
+        try {
+            return (val == null || val.isEmpty()) ? 0.0 : Double.parseDouble(val);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    private Long parseSafeLong(String val) {
+        try {
+            if (val == null || val.isEmpty()) return 0L;
+            return (long) Double.parseDouble(val); // 한투는 정수도 100.0 형태로 줄 때가 있음
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 }

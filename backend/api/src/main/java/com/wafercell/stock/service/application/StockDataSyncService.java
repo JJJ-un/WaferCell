@@ -2,7 +2,7 @@ package com.wafercell.stock.service.application;
 
 import com.wafercell.stock.dto.indicator.StockIndicators;
 import com.wafercell.stock.dto.response.StockPriceData;
-import com.wafercell.stock.dto.response.StockDetailDto;
+import com.wafercell.stock.dto.response.StockSnapshot;
 import com.wafercell.stock.entity.Stock;
 import com.wafercell.stock.repository.StockRepository;
 import com.wafercell.stock.service.domain.StockMapper;
@@ -63,15 +63,15 @@ public class StockDataSyncService {
                         .tradingValueRatio(tamtRatio)
                         .build();
 
-                // 7. DB에서 가져온 기본 정보 + API에서 가져온 상세 정보 + 계산된 지표를 조합하여 DTO 생성
-                StockDetailDto node = stockMapper.toDetailDto(stock, stockPriceData, indicators);
+                // 7. DB에서 가져온 기본 정보 + API에서 가져온 상세 정보 + 계산된 지표를 조합하여 Snapshot 생성
+                StockSnapshot node = stockMapper.toSnapshot(stock, stockPriceData, indicators);
                 
                 // 8. 캐시에 업데이트된 정보 저장
                 stockDetailStore.update(ticker, node);
                 Thread.sleep(100);
             } catch (Exception e) {
                 log.error("데이터 동기화 실패: {} - {}", ticker, e.getMessage());
-                stockDetailStore.update(ticker, stockMapper.toFallbackDto(stock));
+                stockDetailStore.update(ticker, stockMapper.toFallbackSnapshot(stock));
             }
         }
         log.info("모든 주식 데이터 최신화 완료");

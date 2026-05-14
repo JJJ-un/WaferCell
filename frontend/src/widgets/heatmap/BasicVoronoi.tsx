@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { type Stock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot } from '@/entities/stock/types/stock.types';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
@@ -30,7 +30,7 @@ export const BasicVoronoi = () => {
     if (!selectedSector || selectedSector === '전체') {
       return allStocks;
     }
-    return allStocks.filter(stock => stock.sector === selectedSector);
+    return allStocks.filter(stock => stock.base.sector === selectedSector);
   }, [heatmapData?.stocks, selectedSector]);
 
   // 3. 현재 마우스가 올라간 종목의 최신 데이터를 실시간으로 가져옴
@@ -55,27 +55,27 @@ export const BasicVoronoi = () => {
           if (!d.polygon) return null;
           
           // 핵심: 다각형에 저장된 ticker를 이용해 '진짜 최신 데이터'를 가져옵니다.
-          const staleStock = d.data as Stock;
-          const stock = heatmapData?.stocks[staleStock.ticker] || staleStock;
+          const staleStock = d.data as StockSnapshot;
+          const stock = heatmapData?.stocks[staleStock.base.ticker] || staleStock;
           
           const centroid = d3.polygonCentroid(d.polygon);
 
           return (
-            <g key={stock.ticker || i}>
+            <g key={stock.base.ticker || i}>
               <path
                 d={d3.line()(d.polygon) + "z"}
-                fill={colorScale(stock.changePercent)}
+                fill={colorScale(stock.price.changePercent)}
                 stroke="#eee"
                 strokeWidth="0.5"
                 onMouseEnter={() => {
                   setHoveredPosition({ x: centroid[0], y: centroid[1] });
-                  setHoveredTicker(stock.ticker);
+                  setHoveredTicker(stock.base.ticker);
                 }} 
                 onMouseLeave={() => {
                   setHoveredPosition(null);
                   setHoveredTicker(null);
                 }}
-                onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.ticker } })}
+                onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.base.ticker } })}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text
@@ -84,11 +84,11 @@ export const BasicVoronoi = () => {
                 fontSize="20"
                 fontWeight="semi-bold"
                 textAnchor="middle"
-                fill={Math.abs(stock.changePercent) > 2.0 ? "#fff" : "#1e293b"}
+                fill={Math.abs(stock.price.changePercent) > 2.0 ? "#fff" : "#1e293b"}
                 pointerEvents="none"
-                style={{ textShadow: Math.abs(stock.changePercent) <= 2.0 ? '0 0 2px white' : 'none' }}
+                style={{ textShadow: Math.abs(stock.price.changePercent) <= 2.0 ? '0 0 2px white' : 'none' }}
               >
-                {stock.ticker}
+                {stock.base.ticker}
               </text>
             </g>
           );

@@ -1,52 +1,59 @@
-import { type Stock, type UpdatedStock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot, type UpdatedStock, type StockPrice, type StockIndicators } from '@/entities/stock/types/stock.types';
 
 /**
- * 소켓에서 온 문자열(Raw) 데이터를 숫자로 변환합니다.
- * 값이 존재하는 경우에만 객체에 포함시켜 기존 데이터를 덮어쓰지 않도록 합니다.
+ * 소켓에서 온 수치 데이터를 DTO 구조에 맞게 매핑합니다.
  */
-export const transformUpdate = (data: UpdatedStock): Partial<Stock> => {
-  const result: Partial<Stock> = {};
+export const transformUpdate = (data: UpdatedStock): { price: Partial<StockPrice>, indicators: Partial<StockIndicators> } => {
+  const price: Partial<StockPrice> = {
+    price: data.price,
+    changePercent: data.changePercent,
+    volume: data.volume,
+    highPrice: data.highPrice,
+    lowPrice: data.lowPrice
+  };
 
-  if (data.price) result.price = parseFloat(data.price);
-  if (data.rate) result.changePercent = parseFloat(data.rate);
-  if (data.volume) result.volume = parseInt(data.volume, 10);
-  if (data.highPrice) result.highPrice = parseFloat(data.highPrice);
-  if (data.lowPrice) result.lowPrice = parseFloat(data.lowPrice);
-  if (data.tradingValue) result.tradingValue = parseFloat(data.tradingValue);
-  if (data.strength) result.strength = parseFloat(data.strength);
-  if (data.rsi) result.rsi = parseFloat(data.rsi);
-  if (data.tradingValueRatio) result.tradingValueRatio = parseFloat(data.tradingValueRatio);
+  const indicators: Partial<StockIndicators> = {
+    tradingValue: data.tradingValue,
+    strength: data.strength,
+    rsi: data.rsi,
+    tradingValueRatio: data.tradingValueRatio
+  };
 
-  return result;
+  return { price, indicators };
 };
 
 /**
  * [Surgical Update] 단일 종목의 전체 데이터를 완성하여 반환합니다.
- * 고정된 값(averageTradingValue)과 실시간 값(tradingValue)을 조합하여 지표를 재계산합니다.
  */
 export const calculateStockUpdate = (
-  currentStock: Stock,
+  currentStock: StockSnapshot,
   updateRaw: UpdatedStock,
   soxxRate: number
-): Stock => {
-  const updatedInfo = transformUpdate(updateRaw);
+): StockSnapshot => {
+  const { price: updatedPrice, indicators: updatedIndicators } = transformUpdate(updateRaw);
 
-  // 1. 기본 정보 병합
-  const mergedStock = {
-    ...currentStock,
-    ...updatedInfo,
+  // 1. 객체 병합 (중첩 구조 유지)
+  const mergedPrice = {
+    ...currentStock.price,
+    ...updatedPrice,
   };
 
-  // 2. 실시간 지표 재계산 (프론트엔드 책임)
+  const mergedIndicators = {
+    ...currentStock.indicators,
+    ...updatedIndicators,
+  };
 
-  // 거래대금 비율: (현재 거래대금 / 평균 거래대금) * 100
-  // 만약 소켓에서 직접 내려준다면 그것을 쓰고, 없다면 프론트에서 계산
-  if (!updatedInfo.tradingValueRatio && mergedStock.tradingValue && mergedStock.averageTradingValue) {
-    mergedStock.tradingValueRatio = (mergedStock.tradingValue / mergedStock.averageTradingValue) * 100;
+  // 2. 실시간 지표 재계산
+  if (!updatedIndicators.tradingValueRatio && mergedIndicators.tradingValue && mergedIndicators.averageTradingValue) {
+    mergedIndicators.tradingValueRatio = (mergedIndicators.tradingValue / mergedIndicators.averageTradingValue) * 100;
   }
 
-  // SOXX 대비 상대 변동률: 현재 등락률 - SOXX 등락률
-  mergedStock.relativeChange = mergedStock.changePercent - soxxRate;
+  // SOXX 대비 상대 변동률
+  mergedIndicators.relativeChange = mergedPrice.changePercent - soxxRate;
 
-  return mergedStock;
+  return {
+    ...currentStock,
+    price: mergedPrice,
+    indicators: mergedIndicators,
+  };
 };

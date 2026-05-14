@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchHeatmap } from '../api/fetchHeatmap';
-import type { StockResponse, IndexedStockResponse, StockSummary, Stock } from '../types/stock.types';
+import type { StockResponse, IndexedStockResponse, StockSummary, StockSnapshot } from '../types/stock.types';
 
 // 초기 배열 데이터를 인덱싱된 Record 데이터로 변환, 최초 1회 계산
 const indexStocks = (data: StockResponse): IndexedStockResponse => {
-  const stocksRecord: Record<string, Stock> = {};
+  const stocksRecord: Record<string, StockSnapshot> = {};
   data.stocks.forEach(stock => {
-    stocksRecord[stock.ticker] = stock;
+    stocksRecord[stock.base.ticker] = stock;
   });
 
   const sectorsRecord: Record<string, StockSummary> = {};

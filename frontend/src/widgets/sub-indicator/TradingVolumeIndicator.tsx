@@ -12,8 +12,8 @@ export const TradingVolumeIndicator = () => {
     if (!hoveredTicker) return { tradingValue: 0, tradingValueRatio: 0 };
     const stock = data.stocks[hoveredTicker];
     return {
-      tradingValue: stock?.tradingValue || 0,
-      tradingValueRatio: stock?.tradingValueRatio || 0
+      tradingValue: stock?.indicators.tradingValue || 0,
+      tradingValueRatio: stock?.indicators.tradingValueRatio || 0
     };
   }, !!hoveredTicker).data || {};
 

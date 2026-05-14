@@ -16,52 +16,63 @@ export interface StockSummary {
   volume: number;
 }
 
-// 3. 상세 주식 정보 (StockSummary 확장)
-export interface Stock extends StockSummary {
+// 3. 상세 주식 정보 (중첩 구조로 변경)
+export interface StockBase {
+  name: string;
   ticker: string;
   sector: string;
+  marketCap: number;
+}
+
+export interface StockPrice {
   price: number;
+  changePercent: number;
+  volume: number;
   highPrice: number;
   lowPrice: number;
   prevClose: number;
+}
+
+export interface StockIndicators {
+  rsi?: number;
   tradingValue?: number;
   strength?: number;
-  rsi?: number;
   averageTradingValue?: number;
   tradingValueRatio?: number;
-  // SOXX 대비 상대 변동률(아직쓰이지 않고 있다.)
   relativeChange?: number;
 }
 
-// 4. 인덱싱된 히트맵 구조 (사용자 제안 반영: O(1) 접근 가능)
+export interface StockSnapshot {
+  base: StockBase;
+  price: StockPrice;
+  indicators: StockIndicators;
+}
+
+// 4. 인덱싱된 히트맵 구조
 export interface IndexedStockResponse {
   overall: StockSummary;
-  // 섹터별 즉시 접근: sectors['팹리스']
   sectors: Record<string, StockSummary>; 
-  // 티커별 즉시 접근: stocks['NVDA']
-  stocks: Record<string, Stock>;
+  stocks: Record<string, StockSnapshot>;
 }
 
 // 5. 소켓에서 오는 원본 데이터 타입 (변환용)
 export interface UpdatedStock {
   ticker: string;
-  price: string;
-  rate: string;     // UI의 changePercent로 변환됨
-  volume: string;
-  highPrice: string;
-  lowPrice: string;
-  timestamp: string;
-  tradingValue?: string;
-  strength?: string;
-  rsi?: string;
-  tradingValueRatio?: string;
+  price: number;
+  changePercent: number;     
+  volume: number;
+  highPrice: number;
+  lowPrice: number;
+  tradingValue?: number;
+  strength?: number;
+  rsi?: number;
+  tradingValueRatio?: number;
 }
 
-// 웹소켓에서 해당과 같은 형태로 값을 불러온다. 
 export interface StockResponse {
   overall: StockSummary;
   sectors: StockSummary[];
-  stocks: Stock[];
+  stocks: StockSnapshot[];
 }
 
 

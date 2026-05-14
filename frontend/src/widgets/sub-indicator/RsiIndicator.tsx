@@ -7,7 +7,7 @@ export const RsiIndicator = () => {
 
   // useHeatmapQuery가 반환하는 데이터는 setQueryData에 의해 실시간으로 업데이트된 객체입니다.
   const { data: rsi = 50 } = useHeatmapQuery(
-    data => hoveredTicker ? (data.stocks[hoveredTicker]?.rsi ?? 50) : 50,
+    data => hoveredTicker ? (data.stocks[hoveredTicker]?.indicators.rsi ?? 50) : 50,
     !!hoveredTicker
   );
 

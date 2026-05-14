@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { type Stock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot } from '@/entities/stock/types/stock.types';
 import { StockTooltip } from './StockTooltip';
 import { useColorScale } from '@/shared/model/hooks/useColorScale';
 import { useTreemap } from '@/features/stock-heatmap/hooks/useTreemap';
@@ -21,7 +21,7 @@ export const StandardHeatmap = () => {
     if (!heatmapData) return [];
     const allStocks = Object.values(heatmapData.stocks);
     if (!selectedSector || selectedSector === '전체') return allStocks;
-    return allStocks.filter(stock => stock.sector === selectedSector);
+    return allStocks.filter(stock => stock.base.sector === selectedSector);
   }, [heatmapData?.stocks, selectedSector]);
 
   // 3. 마우스 호버 데이터
@@ -36,14 +36,14 @@ export const StandardHeatmap = () => {
   const [hoveredPosition, setHoveredPosition] = useState<{ x: number, y: number } | null>(null);  
   const colorScale = useColorScale();
   
-  // 4. 사각형 트리맵 레이아웃 계산
+  // 4. 사각형 트리맵 레이아웃 계산 (marketCap 위치 확인 필요: stock.base.marketCap)
   const nodes = useTreemap(filteredData, width, height);
 
   return (
     <div style={{ position: 'relative' }}>
       <svg width={width} height={height} className="rounded-lg overflow-hidden border border-slate-200">
         {nodes.map((d: any, i) => {
-          const stock = d.data as Stock;
+          const stock = d.data as StockSnapshot;
           const rectWidth = d.x1 - d.x0;
           const rectHeight = d.y1 - d.y0;
           
@@ -52,12 +52,12 @@ export const StandardHeatmap = () => {
 
           return (
             <g 
-              key={stock.ticker || i} 
+              key={stock.base.ticker || i} 
               transform={`translate(${d.x0},${d.y0})`}
-              onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.ticker } })}
+              onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.base.ticker } })}
               onMouseEnter={() => {
                 setHoveredPosition({ x: d.x0 + rectWidth / 2, y: d.y0 + rectHeight / 2 });
-                setHoveredTicker(stock.ticker);
+                setHoveredTicker(stock.base.ticker);
               }} 
               onMouseLeave={() => {
                 setHoveredPosition(null);
@@ -68,7 +68,7 @@ export const StandardHeatmap = () => {
               <rect
                 width={rectWidth}
                 height={rectHeight}
-                fill={colorScale(stock.changePercent)}
+                fill={colorScale(stock.price.changePercent)}
                 stroke="white"
                 strokeWidth="0.5"
                 className="transition-all duration-200 cursor-pointer group-hover:brightness-110"
@@ -81,11 +81,11 @@ export const StandardHeatmap = () => {
                   dominantBaseline="middle"
                   fontSize={Math.min(rectWidth / 5, 14)}
                   fontWeight="600"
-                  fill={Math.abs(stock.changePercent) > 4.0 ? "#fff" : "#1e293b"}
+                  fill={Math.abs(stock.price.changePercent) > 4.0 ? "#fff" : "#1e293b"}
                   pointerEvents="none"
                   style={{ userSelect: 'none' }}
                 >
-                  {stock.ticker}
+                  {stock.base.ticker}
                 </text>
               )}
             </g>

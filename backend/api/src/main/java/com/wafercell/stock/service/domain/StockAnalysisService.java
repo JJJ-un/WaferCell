@@ -1,6 +1,6 @@
 package com.wafercell.stock.service.domain;
 
-import com.wafercell.stock.dto.response.StockDetailDto;
+import com.wafercell.stock.dto.response.StockSnapshot;
 import com.wafercell.stock.dto.response.StockHeatmapResponse;
 import com.wafercell.stock.dto.response.StockSummaryDto;
 import lombok.RequiredArgsConstructor;
@@ -19,13 +19,13 @@ public class StockAnalysisService {
     private static final String BENCHMARK_TICKER = "SOXX";
     private static final String MARKET_TOTAL_NAME = "반도체 전체";
 
-    public StockHeatmapResponse generateMarketAnalysis(List<StockDetailDto> allStocks) {
-        // 1. 벤치마크 대비 상대 수익률 계산 (Policy) => 현재 애매한 부분이 많은 지표이다. 
-        List<StockDetailDto> analyzedStocks = applyRelativeChange(allStocks);
+    public StockHeatmapResponse generateMarketAnalysis(List<StockSnapshot> allStocks) {
+        // 1. 벤치마크 대비 상대 수익률 계산
+        List<StockSnapshot> analyzedStocks = applyRelativeChange(allStocks);
         
-        // 2. 섹터별 그룹화 및 요약 (Aggregation)
-        Map<String, List<StockDetailDto>> groupedBySector = analyzedStocks.stream()
-                .collect(Collectors.groupingBy(StockDetailDto::getSector));
+        // 2. 섹터별 그룹화 및 요약
+        Map<String, List<StockSnapshot>> groupedBySector = analyzedStocks.stream()
+                .collect(Collectors.groupingBy(s -> s.getBase().getSector()));
 
         List<StockSummaryDto> sectorSummaries = groupedBySector.entrySet().stream()
                 .map(entry -> calculateSectorSummary(entry.getKey(), entry.getValue()))
@@ -41,29 +41,28 @@ public class StockAnalysisService {
                 .build();
     }
 
-    private List<StockDetailDto> applyRelativeChange(List<StockDetailDto> stocks) {
+    private List<StockSnapshot> applyRelativeChange(List<StockSnapshot> stocks) {
         double benchmarkRate = stocks.stream()
-                .filter(stock -> BENCHMARK_TICKER.equals(stock.getTicker()))
-                .mapToDouble(StockDetailDto::getChangePercent)
+                .filter(s -> BENCHMARK_TICKER.equals(s.getBase().getTicker()))
+                .mapToDouble(s -> s.getPrice().getChangePercent())
                 .findFirst()
                 .orElse(0.0);
     
-        // 2. forEach(수정) 대신 map(변환)을 사용
         return stocks.stream()
-                .map(stock -> stock.calculateRelativeChange(benchmarkRate)) // 새 객체 반환받음
-                .collect(Collectors.toList()); // 새 객체들을 새 리스트에 담음
+                .map(s -> s.calculateRelativeChange(benchmarkRate))
+                .collect(Collectors.toList());
     }
 
-    private StockSummaryDto calculateSectorSummary(String sectorName, List<StockDetailDto> sectorStocks) {
-        // 그냥 시가총액 더한것
-        double totalMarketCap = sectorStocks.stream().mapToDouble(StockDetailDto::getMarketCap).sum();
+    private StockSummaryDto calculateSectorSummary(String sectorName, List<StockSnapshot> sectorStocks) {
+        double totalMarketCap = sectorStocks.stream()
+                .mapToDouble(s -> s.getBase().getMarketCap())
+                .sum();
         
-        double weightedAvgChange = calculator.calculateWeightedAverageChange(totalMarketCap, sectorStocks);
+        double weightedAvgChange = calculator.calculateWeightedAverageChangeSnapshot(totalMarketCap, sectorStocks);
 
         return StockSummaryDto.builder()
                 .name(sectorName)
                 .marketCap(totalMarketCap)
-                // 섹터의 등락률
                 .changePercent(weightedAvgChange)
                 .build();
     }
