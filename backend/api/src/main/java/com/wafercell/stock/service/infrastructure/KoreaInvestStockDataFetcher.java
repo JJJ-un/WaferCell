@@ -3,8 +3,8 @@ package com.wafercell.stock.service.infrastructure;
 import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.stock.client.KoreaInvestStockClient;
 import com.wafercell.stock.dto.response.StockDailyPriceRaw;
-import com.wafercell.stock.dto.response.StockDetailRaw;
-import com.wafercell.stock.dto.response.StockApiResponse;
+import com.wafercell.stock.dto.response.KisStockRaw;
+import com.wafercell.stock.dto.response.StockPriceData;
 import com.wafercell.stock.entity.Stock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -22,8 +22,8 @@ public class KoreaInvestStockDataFetcher implements StockDataFetcher {
     private final StockApiResponseParser parser;
 
     @Override
-    public StockApiResponse fetchDetail(Stock stock) {
-        KoreaInvestRawResponse<StockDetailRaw> response = stockClient.getOverseasStockDetail(stock.getExchange(), stock.getTicker());
+    public StockPriceData fetchDetail(Stock stock) {
+        KoreaInvestRawResponse<KisStockRaw> response = stockClient.getOverseasStockDetail(stock.getExchange(), stock.getTicker());
         return parser.parseDetail(response.getOutput());
     }
 

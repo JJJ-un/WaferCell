@@ -5,11 +5,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 한투 해외 주식 상세 시세 Raw DTO 
+ * 한투 해외 주식 현재가상세 API를 받는 Raw DTO
  */
 @Getter
 @NoArgsConstructor
-public class StockDetailRaw {
+public class KisStockRaw {
     @JsonProperty("last")
     private String lastPrice;
 

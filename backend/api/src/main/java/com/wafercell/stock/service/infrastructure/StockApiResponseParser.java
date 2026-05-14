@@ -1,17 +1,17 @@
 package com.wafercell.stock.service.infrastructure;
 
-import com.wafercell.stock.dto.response.StockDetailRaw;
-import com.wafercell.stock.dto.response.StockApiResponse;
+import com.wafercell.stock.dto.response.KisStockRaw;
+import com.wafercell.stock.dto.response.StockPriceData;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
 public class StockApiResponseParser {
 
-    public StockApiResponse parseDetail(StockDetailRaw raw) {
+    public StockPriceData parseDetail(KisStockRaw raw) {
         if (raw == null) throw new RuntimeException("API 응답 데이터가 없습니다.");
 
-        return StockApiResponse.builder()
+        return StockPriceData.builder()
                 .marketCap(parseSafeDouble(raw.getMarketCap()))
                 .lastPrice(parseSafeDouble(raw.getLastPrice()))
                 .basePrice(parseSafeDouble(raw.getBasePrice()))
@@ -21,6 +21,7 @@ public class StockApiResponseParser {
                 .changeRate(parseSafeDouble(raw.getChangeRate()))
                 .volume(parseSafeLong(raw.getVolume()))
                 .tradingValue(parseSafeDouble(raw.getTradingValue()))
+                .strength(100.0)
                 .build();
     }
 
