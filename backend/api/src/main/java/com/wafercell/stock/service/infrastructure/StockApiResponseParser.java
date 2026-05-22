@@ -28,8 +28,10 @@ public class StockApiResponseParser {
     public double parseSafeDouble(String val) {
         return Optional.ofNullable(val)
                 .map(s -> {
-                    try { return Double.parseDouble(s.trim()); }
-                    catch (Exception e) { return 0.0; }
+                    try {
+                        String cleanVal = s.replace(",", "").trim();
+                        return Double.parseDouble(cleanVal);
+                    } catch (Exception e) { return 0.0; }
                 })
                 .orElse(0.0);
     }
@@ -37,8 +39,10 @@ public class StockApiResponseParser {
     public long parseSafeLong(String val) {
         return Optional.ofNullable(val)
                 .map(s -> {
-                    try { return Long.parseLong(s.trim()); }
-                    catch (Exception e) { return 0L; }
+                    try {
+                        String cleanVal = s.replace(",", "").trim();
+                        return Long.parseLong(cleanVal);
+                    } catch (Exception e) { return 0L; }
                 })
                 .orElse(0L);
     }

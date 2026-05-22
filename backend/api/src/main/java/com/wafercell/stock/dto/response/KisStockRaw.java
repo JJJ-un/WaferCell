@@ -22,7 +22,7 @@ public class KisStockRaw {
     @JsonProperty("rate")
     private String changeRate;
 
-    @JsonProperty("t_avls")
+    @JsonProperty("tomv")
     private String marketCap;
 
     @JsonProperty("tvol")

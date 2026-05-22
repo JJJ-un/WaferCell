@@ -22,7 +22,7 @@ public class NewsRaw {
     @JsonProperty("data_tm")
     private String time;
 
-    @JsonProperty("hts_pbnt_titl_cntl")
+    @JsonProperty("hts_pbnt_titl_nm")
     private String title;
 
     @JsonProperty("dorg")

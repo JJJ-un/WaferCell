@@ -58,17 +58,23 @@ public class StockAnalysisService {
                 .mapToDouble(s -> s.getBase().getMarketCap())
                 .sum();
         
+        long totalVolume = sectorStocks.stream()
+                .mapToLong(s -> s.getPrice().getVolume())
+                .sum();
+        
         double weightedAvgChange = calculator.calculateWeightedAverageChangeSnapshot(totalMarketCap, sectorStocks);
 
         return StockSummaryDto.builder()
                 .name(sectorName)
                 .marketCap(totalMarketCap)
                 .changePercent(weightedAvgChange)
+                .volume(totalVolume)
                 .build();
     }
 
     private StockSummaryDto calculateOverallSummary(List<StockSummaryDto> sectorSummaries) {
         double overallMarketCap = sectorSummaries.stream().mapToDouble(StockSummaryDto::getMarketCap).sum();
+        long overallVolume = sectorSummaries.stream().mapToLong(StockSummaryDto::getVolume).sum();
 
         // 전체 요약의 경우 SummaryDto 리스트이므로 별도 계산 (필요시 Calculator에 오버로딩 가능)
         double overallChangeRate = overallMarketCap <= 0 ? 0 :
@@ -80,6 +86,7 @@ public class StockAnalysisService {
                 .name(MARKET_TOTAL_NAME)
                 .marketCap(overallMarketCap)
                 .changePercent(overallChangeRate)
+                .volume(overallVolume)
                 .build();
     }
 }

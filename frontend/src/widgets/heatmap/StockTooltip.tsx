@@ -10,8 +10,8 @@ export interface StockProps {
 /**
  * 숫자를 K, M, B 단위로 포맷팅
  */
-const formatUnit = (num: number | undefined): string => {
-    if (num === undefined) return '-';
+const formatUnit = (num: number | null | undefined): string => {
+    if (num == null) return '-';
     if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
     if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -21,8 +21,8 @@ const formatUnit = (num: number | undefined): string => {
 /**
  * 통화 포맷팅 (달러)
  */
-const formatCurrency = (num: number | undefined): string => {
-    if (num === undefined || num === 0) return '-';
+const formatCurrency = (num: number | null | undefined): string => {
+    if (num == null || num === 0) return '-';
     return '$' + num.toLocaleString();
 };
 

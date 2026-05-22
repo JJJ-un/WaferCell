@@ -13,8 +13,23 @@ public class StockDailyPriceRaw {
     @JsonProperty("clos")
     private String closePrice;
 
+    @JsonProperty("diff")
+    private String changeAmount;
+
+    @JsonProperty("rate")
+    private String changeRate;
+
     @JsonProperty("tamt")
     private String tradingValue;
+
+    @JsonProperty("tvol")
+    private String volume;
+
+    @JsonProperty("high")
+    private String highPrice;
+
+    @JsonProperty("low")
+    private String lowPrice;
 
     @JsonProperty("xymd")
     private String date;

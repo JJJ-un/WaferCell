@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-export const Heaader= () => {
+export const Header= () => {
     return (
         <div className="h-[80px] bg-header flex items-center px-[40px] top-0 sticky z-[200]">
           <div className="flex-1">

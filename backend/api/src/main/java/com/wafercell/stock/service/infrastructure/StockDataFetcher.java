@@ -1,5 +1,6 @@
 package com.wafercell.stock.service.infrastructure;
 
+import com.wafercell.stock.dto.response.StockDailyPriceRaw;
 import com.wafercell.stock.dto.response.StockPriceData;
 import com.wafercell.stock.entity.Stock;
 import java.util.List;
@@ -9,4 +10,5 @@ import java.util.Map;
 public interface StockDataFetcher {
     StockPriceData fetchDetail(Stock stock);
     Map<String, List<Double>> fetchHistoricalData(Stock stock);
+    List<StockDailyPriceRaw> fetchDailyPriceRawList(Stock stock);
 }
