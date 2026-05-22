@@ -39,6 +39,7 @@ public class StockSnapshot {
                     .volume(update.getVolume())
                     .highPrice(update.getHighPrice())
                     .lowPrice(update.getLowPrice())
+                    .strength(update.getStrength())
                     .build();
 
             return this.toBuilder()

@@ -28,12 +28,12 @@ public class StockMapper {
                 .lowPrice(response.getLowPrice())
                 .prevClose(response.getBasePrice())
                 .volume(response.getVolume())
+                .strength(response.getStrength())
                 .build();
 
-        // 지표 객체 보강 (거래대금, 체결강도 추가)
+        // 지표 객체 보강 (거래대금 추가)
         StockIndicators enrichedIndicators = indicators.toBuilder()
                 .tradingValue(response.getTradingValue())
-                .strength(response.getStrength())
                 .build();
 
         return StockSnapshot.builder()
@@ -64,7 +64,6 @@ public class StockMapper {
 
         StockIndicators indicators = StockIndicators.builder()
                 .rsi(50.0)
-                .strength(100.0)
                 .build();
 
         return StockSnapshot.builder()

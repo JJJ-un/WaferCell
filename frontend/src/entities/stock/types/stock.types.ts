@@ -31,12 +31,12 @@ export interface StockPrice {
   highPrice: number;
   lowPrice: number;
   prevClose: number;
+  strength?: number;
 }
 
 export interface StockIndicators {
   rsi?: number;
   tradingValue?: number;
-  strength?: number;
   averageTradingValue?: number;
   tradingValueRatio?: number;
   relativeChange?: number;
@@ -55,18 +55,22 @@ export interface IndexedStockResponse {
   stocks: Record<string, StockSnapshot>;
 }
 
-// 5. 소켓에서 오는 원본 데이터 타입 (변환용)
+// 5. 소켓에서 오는 완성된 데이터 타입 (백엔드 StockRealtimeResponse와 동기화)
 export interface UpdatedStock {
   ticker: string;
-  price: number;
-  changePercent: number;     
-  volume: number;
-  highPrice: number;
-  lowPrice: number;
-  tradingValue?: number;
-  strength?: number;
-  rsi?: number;
-  tradingValueRatio?: number;
+  price: {
+    price: number;
+    changePercent: number;
+    volume: number;
+    highPrice: number;
+    lowPrice: number;
+    strength: number;
+  };
+  indicators: {
+    rsi: number;
+    tradingValue: number;
+    tradingValueRatio: number;
+  };
 }
 
 export interface StockResponse {

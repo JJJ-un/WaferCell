@@ -1,54 +1,26 @@
-import { type StockSnapshot, type UpdatedStock, type StockPrice, type StockIndicators } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot, type UpdatedStock } from '@/entities/stock/types/stock.types';
 
 /**
- * 소켓에서 온 수치 데이터를 DTO 구조에 맞게 매핑합니다.
- */
-export const transformUpdate = (data: UpdatedStock): { price: Partial<StockPrice>, indicators: Partial<StockIndicators> } => {
-  const price: Partial<StockPrice> = {
-    price: data.price,
-    changePercent: data.changePercent,
-    volume: data.volume,
-    highPrice: data.highPrice,
-    lowPrice: data.lowPrice
-  };
-
-  const indicators: Partial<StockIndicators> = {
-    tradingValue: data.tradingValue,
-    strength: data.strength,
-    rsi: data.rsi,
-    tradingValueRatio: data.tradingValueRatio
-  };
-
-  return { price, indicators };
-};
-
-/**
- * [Surgical Update] 단일 종목의 전체 데이터를 완성하여 반환합니다.
+ * [Surgical Update] 서버에서 완성된 데이터를 받아 단일 종목의 상태를 갱신합니다.
+ * 백엔드에서 모든 지표(RSI, 거래대금 비율 등)를 계산해서 보내주므로 프론트는 단순 덮어쓰기만 수행합니다.
  */
 export const calculateStockUpdate = (
   currentStock: StockSnapshot,
   updateRaw: UpdatedStock,
   soxxRate: number
 ): StockSnapshot => {
-  const { price: updatedPrice, indicators: updatedIndicators } = transformUpdate(updateRaw);
-
-  // 1. 객체 병합 (중첩 구조 유지)
+  // 1. 서버에서 온 데이터로 가격 및 지표 갱신
   const mergedPrice = {
     ...currentStock.price,
-    ...updatedPrice,
+    ...updateRaw.price,
   };
 
   const mergedIndicators = {
     ...currentStock.indicators,
-    ...updatedIndicators,
+    ...updateRaw.indicators,
   };
 
-  // 2. 실시간 지표 재계산
-  if (!updatedIndicators.tradingValueRatio && mergedIndicators.tradingValue && mergedIndicators.averageTradingValue) {
-    mergedIndicators.tradingValueRatio = (mergedIndicators.tradingValue / mergedIndicators.averageTradingValue) * 100;
-  }
-
-  // SOXX 대비 상대 변동률
+  // 2. 상대 변동률만 프론트엔드의 현재 기준(SOXX)으로 계산 (백엔드 부하 경감)
   mergedIndicators.relativeChange = mergedPrice.changePercent - soxxRate;
 
   return {

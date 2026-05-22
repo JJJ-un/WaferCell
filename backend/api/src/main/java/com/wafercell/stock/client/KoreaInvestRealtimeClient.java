@@ -152,7 +152,6 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
 
     // 인덱스 상수 (HDFSCNT0 기준)
     private static final int INDEX_TICKER = 1;
-    private static final int INDEX_TIMESTAMP = 5;
     private static final int INDEX_HIGH_PRICE = 9;
     private static final int INDEX_LOW_PRICE = 10;
     private static final int INDEX_PRICE = 11;

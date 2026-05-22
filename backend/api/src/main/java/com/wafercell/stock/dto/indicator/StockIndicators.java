@@ -16,6 +16,5 @@ public class StockIndicators {
     private Double averageTradingValue;
     private Double tradingValueRatio;
     private Double tradingValue;
-    private Double strength;
     private Double relativeChange;
 }

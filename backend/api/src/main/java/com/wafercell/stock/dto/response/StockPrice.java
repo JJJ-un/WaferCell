@@ -16,4 +16,5 @@ public class StockPrice {
     private Double highPrice;
     private Double lowPrice;
     private Double prevClose;
+    private Double strength;
 }
