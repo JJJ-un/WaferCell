@@ -14,7 +14,7 @@ apiClient.interceptors.response.use(
     if (axios.isAxiosError(error)) {
       const response = error.response
       const data = response?.data
-      if (data.status === 401) {
+      if (data && data.status === 401) {
         // 401 Unauthorized 처리 (예: 토큰 만료)
       }
     }

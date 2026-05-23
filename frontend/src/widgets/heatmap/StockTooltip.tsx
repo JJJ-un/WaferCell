@@ -1,7 +1,7 @@
-import { type Stock } from "@/entities/stock/types/stock.types";
+import { type StockSnapshot } from "@/entities/stock/types/stock.types";
 
 export interface StockProps {
-    data: Stock;
+    data: StockSnapshot;
     x?: number; 
     y?: number; 
 
@@ -10,8 +10,8 @@ export interface StockProps {
 /**
  * 숫자를 K, M, B 단위로 포맷팅
  */
-const formatUnit = (num: number | undefined): string => {
-    if (num === undefined) return '-';
+const formatUnit = (num: number | null | undefined): string => {
+    if (num == null) return '-';
     if (num >= 1000000000) return (num / 1000000000).toFixed(2) + 'B';
     if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
@@ -21,16 +21,17 @@ const formatUnit = (num: number | undefined): string => {
 /**
  * 통화 포맷팅 (달러)
  */
-const formatCurrency = (num: number | undefined): string => {
-    if (num === undefined || num === 0) return '-';
+const formatCurrency = (num: number | null | undefined): string => {
+    if (num == null || num === 0) return '-';
     return '$' + num.toLocaleString();
 };
 
 export const StockTooltip = ({ data, x, y }: StockProps) => {
+    const { base, price } = data;
     // 상태에 따른 컬러 변수 추출
-    const isUp = data.changePercent > 0;
-    const isDown = data.changePercent < 0;
-    const statusColor = isUp ? 'text-red-400' : isDown ? 'text-blue-400' : 'text-slate-400';
+    const isUp = price.changePercent > 0;
+    const isDown = price.changePercent < 0;
+    const statusColor = isUp ? 'text-trend-up-500' : isDown ? 'text-trend-down-500' : 'text-slate-400';
 
     return (
         <div 
@@ -42,7 +43,7 @@ export const StockTooltip = ({ data, x, y }: StockProps) => {
         >
             {/* 헤더: 티커 */}
             <div className="flex justify-between items-center font-black text-xl mb-3 border-b border-slate-700 pb-2">
-                <span>{data.ticker}</span>
+                <span>{base.ticker}</span>
                 <span className={`text-[0.9rem] ${statusColor}`}>
                     {isUp ? '▲' : isDown ? '▼' : '-'}
                 </span>
@@ -52,12 +53,12 @@ export const StockTooltip = ({ data, x, y }: StockProps) => {
             <div className="flex flex-col gap-1.5">
                 <div className="flex justify-between gap-4">
                     <span className="text-slate-400">현재가</span>
-                    <span className="font-bold">{formatCurrency(data.price)}</span>
+                    <span className="font-bold">{formatCurrency(price.price)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span className="text-slate-400">등락률</span>
                     <span className={`font-bold ${statusColor}`}>
-                        {isUp ? '+' : ''}{data.changePercent.toFixed(2)}%
+                        {isUp ? '+' : ''}{price.changePercent.toFixed(2)}%
                     </span>
                 </div>
 
@@ -65,22 +66,22 @@ export const StockTooltip = ({ data, x, y }: StockProps) => {
 
                 <div className="flex justify-between">
                     <span className="text-slate-400">전일</span>
-                    <span className="font-bold text-slate-300">{formatUnit(data.prevClose)}</span>
+                    <span className="font-bold text-slate-300">{formatCurrency(price.prevClose)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span className="text-slate-400">저가/고가</span>
-                    <span className="font-bold text-slate-300">{formatUnit(data.highPrice)}</span>
+                    <span className="font-bold text-slate-300">{formatUnit(price.lowPrice)} / {formatUnit(price.highPrice)}</span>
                 </div>
 
                 <hr className="border-none border-t border-slate-700 my-2" />
 
                 <div className="flex justify-between">
                     <span className="text-slate-400">거래량</span>
-                    <span className="font-bold">{formatUnit(data.volume)}</span>
+                    <span className="font-bold">{formatUnit(price.volume)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span className="text-slate-400">시가총액</span>
-                    <span className="font-bold">{formatUnit(data.marketCap)}</span>
+                    <span className="font-bold">{formatUnit(base.marketCap)}</span>
                 </div>
             </div>
         </div>

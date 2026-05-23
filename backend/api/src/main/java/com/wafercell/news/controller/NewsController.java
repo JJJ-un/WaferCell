@@ -14,7 +14,7 @@ import java.util.List;
  * 해외 주식 뉴스 제공을 위한 REST 컨트롤러
  */
 @RestController
-@RequestMapping("/api/news")
+@RequestMapping("/api/stocks/news")
 @RequiredArgsConstructor
 public class NewsController {
 

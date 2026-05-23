@@ -78,7 +78,6 @@
 }
 
 .dark {
-  {
   /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
   --color-background: oklch(0.967 0.003 241.69);
   --color-foreground: #131B2E;
@@ -113,8 +112,6 @@
 
   /* Animations */
   --animate-fade-in: fade-in 0.3s ease-out;
-
-}
 }
 
 @theme {

@@ -1,12 +1,12 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { Heaader } from '@/shared/ui/header/Header'
+import { Header } from '@/shared/ui/header/Header'
 import { NewsFeed } from '../widgets/news-feed/NewsFeed'
 
 export const Route = createRootRoute({
   component: () => (
     <>
       <div className="flex flex-col bg-background text-ink-main min-h-screen">
-        <Heaader />
+        <Header />
         <div className="flex">
           <div className="flex-1">
             <Outlet />

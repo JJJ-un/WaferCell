@@ -152,11 +152,12 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
 
     // 인덱스 상수 (HDFSCNT0 기준)
     private static final int INDEX_TICKER = 1;
-    private static final int INDEX_TIMESTAMP = 5;
+    private static final int INDEX_PRICE = 3;
+    private static final int INDEX_SIGN = 4;
+    private static final int INDEX_DIFF = 5;
+    private static final int INDEX_RATE = 6;
     private static final int INDEX_HIGH_PRICE = 9;
     private static final int INDEX_LOW_PRICE = 10;
-    private static final int INDEX_PRICE = 11;
-    private static final int INDEX_RATE = 14;
     private static final int INDEX_VOLUME = 20;
     private static final int INDEX_TRADING_VALUE = 21;
     private static final int INDEX_STRENGTH = 24;
@@ -219,16 +220,44 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     }
 
     private StockUpdate buildStockUpdate(String[] subParts) {
+        String sign = subParts[INDEX_SIGN];
+        double rate = applyRealtimeSign(parseSafeDouble(subParts[INDEX_RATE]), sign);
+
         return StockUpdate.builder()
                 .ticker(subParts[INDEX_TICKER])
-                .price(subParts[INDEX_PRICE])
-                .highPrice(subParts[INDEX_HIGH_PRICE])
-                .lowPrice(subParts[INDEX_LOW_PRICE])
-                .rate(subParts[INDEX_RATE])
-                .volume(subParts[INDEX_VOLUME])
-                .timestamp(subParts[INDEX_TIMESTAMP])
-                .tradingValue(subParts[INDEX_TRADING_VALUE])
-                .strength(subParts[INDEX_STRENGTH])
+                .price(parseSafeDouble(subParts[INDEX_PRICE]))
+                .highPrice(parseSafeDouble(subParts[INDEX_HIGH_PRICE]))
+                .lowPrice(parseSafeDouble(subParts[INDEX_LOW_PRICE]))
+                .changePercent(rate)
+                .volume(parseSafeLong(subParts[INDEX_VOLUME]))
+                .tradingValue(parseSafeDouble(subParts[INDEX_TRADING_VALUE]))
+                .strength(parseSafeDouble(subParts[INDEX_STRENGTH]))
                 .build();
+    }
+
+    private double applyRealtimeSign(double value, String sign) {
+        if (sign == null) return value;
+        // 4: 하한, 5: 하락인 경우 마이너스 적용
+        if (sign.equals("4") || sign.equals("5")) {
+            return -Math.abs(value);
+        }
+        return Math.abs(value);
+    }
+
+    private Double parseSafeDouble(String val) {
+        try {
+            return (val == null || val.isEmpty()) ? 0.0 : Double.parseDouble(val);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    private Long parseSafeLong(String val) {
+        try {
+            if (val == null || val.isEmpty()) return 0L;
+            return (long) Double.parseDouble(val); // 한투는 정수도 100.0 형태로 줄 때가 있음
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 }

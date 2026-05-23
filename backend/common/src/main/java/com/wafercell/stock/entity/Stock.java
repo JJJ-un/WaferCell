@@ -13,7 +13,9 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Getter
-@Table(name = "stocks")
+@Table(name = "stocks", indexes = {
+        @Index(name = "idx_stock_ticker", columnList = "ticker")
+})
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Stock extends BaseTimeEntity {
 
@@ -33,13 +35,17 @@ public class Stock extends BaseTimeEntity {
     @Column(nullable = false)
     private String sector;      // 세부 공정 섹터 (예: 팹리스, 파운드리, 소부장 등)
 
+    @Column
+    private Double marketCap;   // 시가총액 (Fallback용 또는 정적 정보)
+
 
     @Builder
-    public Stock(String ticker, String name, String exchange, String sector, Double marketCap, Double currentPrice, Double rate) {
+    public Stock(String ticker, String name, String exchange, String sector, Double marketCap) {
         this.ticker = ticker;
         this.name = name;
         this.exchange = exchange;
         this.sector = sector;
+        this.marketCap = marketCap;
     }
 
 }

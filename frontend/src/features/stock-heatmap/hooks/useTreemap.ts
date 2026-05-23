@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 import * as d3 from 'd3';
-import { type Stock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot } from '@/entities/stock/types/stock.types';
 
 /**
  * 데이터를 바탕으로 일반 사각형 트리맵(Treemap) 좌표를 계산하는 훅
  */
-export const useTreemap = (stocks: Stock[], width: number, height: number) => {
+export const useTreemap = (stocks: StockSnapshot[], width: number, height: number) => {
   return useMemo(() => {
     if (!stocks || stocks.length === 0 || width === 0 || height === 0) return [];
 
@@ -13,7 +13,7 @@ export const useTreemap = (stocks: Stock[], width: number, height: number) => {
     const hierarchyData = { name: "root", children: stocks };
     
     const root = d3.hierarchy(hierarchyData)
-      .sum((d: any) => d.marketCap || 0)
+      .sum((d: any) => (d.base && d.base.marketCap) || 0)
       .sort((a, b) => (b.value || 0) - (a.value || 0));
 
     // 2. 트리맵 레이아웃 설정 (사각형 방식)

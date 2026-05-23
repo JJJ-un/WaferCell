@@ -60,7 +60,11 @@ export const NewsFeed = () => {
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-secondary">
                 <span className="font-medium text-secondary">{news.source}</span>
                 <span>•</span>
-                <span>{news.time.substring(0, 2)}:{news.time.substring(2, 4)}</span>
+                <span>
+                  {news.time && news.time.length >= 4 
+                    ? `${news.time.substring(0, 2)}:${news.time.substring(2, 4)}` 
+                    : news.time || '--:--'}
+                </span>
               </div>
             </div>
           ))

@@ -20,6 +20,6 @@ public class StockHeatmapResponse {
     /** 섹터별 요약 정보 리스트 */
     private List<StockSummaryDto> sectors;
 
-    /** 개별 종목 상세 리스트 (평면 데이터) */
-    private List<StockDetailDto> stocks;
+    /** 개별 종목 상세 리스트 (Snapshot 구조) */
+    private List<StockSnapshot> stocks;
 }

@@ -3,7 +3,7 @@ package com.wafercell.stock.client;
 import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.global.properties.KoreaInvestProperties;
 import com.wafercell.stock.dto.response.StockDailyPriceRaw;
-import com.wafercell.stock.dto.response.StockDetailRaw;
+import com.wafercell.stock.dto.response.KisStockRaw;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
@@ -32,7 +32,7 @@ public class KoreaInvestStockClient extends AbstractKoreaInvestClient {
     /**
      * [해외주식] 종목 상세 시세 조회
      */
-    public KoreaInvestRawResponse<StockDetailRaw> getOverseasStockDetail(String exchangeCode, String ticker) {
+    public KoreaInvestRawResponse<KisStockRaw> getOverseasStockDetail(String exchangeCode, String ticker) {
         String uri = createUri(PATH_PRICE_DETAIL, Map.of(
             "AUTH", "",
             "EXCD", exchangeCode,
@@ -40,7 +40,7 @@ public class KoreaInvestStockClient extends AbstractKoreaInvestClient {
         ));
         
         return fetch(uri, TR_OVERSEAS_STOCK_DETAIL, authClient.getAccessToken(), 
-                     new ParameterizedTypeReference<KoreaInvestRawResponse<StockDetailRaw>>() {});
+                     new ParameterizedTypeReference<KoreaInvestRawResponse<KisStockRaw>>() {});
     }
 
     /**

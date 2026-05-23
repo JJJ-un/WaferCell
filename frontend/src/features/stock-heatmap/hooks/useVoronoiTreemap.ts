@@ -1,20 +1,20 @@
 import { useMemo } from 'react';
-import { type Stock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot } from '@/entities/stock/types/stock.types';
 import * as d3 from 'd3';
 // @ts-ignore
 import * as d3VoronoiTreemap from 'd3-voronoi-treemap';
 
 // 계층 구조 데이터 타입 정의
-type HeatmapNode = { name: string; children: Stock[] } | Stock;
+type HeatmapNode = { name: string; children: StockSnapshot[] } | StockSnapshot;
 
 
 /**
  * 데이터를 바탕으로 보로노이 트리맵 다각형 좌표를 계산하는 훅
  */
-export const useVoronoiTreemap = (stocks: Stock[], width: number, height: number) => {
+export const useVoronoiTreemap = (stocks: StockSnapshot[], width: number, height: number) => {
 
   const stockKeys = useMemo(() => 
-    stocks.map(s => `${s.ticker}-${s.marketCap}`).join(','), 
+    stocks.map(s => `${s.base.ticker}-${s.base.marketCap}`).join(','), 
   [stocks]);
   
 
@@ -26,7 +26,7 @@ export const useVoronoiTreemap = (stocks: Stock[], width: number, height: number
 
     return d3.hierarchy<HeatmapNode>(hierarchyData)
           .sum((d) => {
-            return 'marketCap' in d ? d.marketCap : 0;
+            return 'base' in d ? d.base.marketCap : 0;
           });
   }, [stockKeys]); 
 

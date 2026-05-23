@@ -1,52 +1,31 @@
-import { type Stock, type UpdatedStock } from '@/entities/stock/types/stock.types';
+import { type StockSnapshot, type UpdatedStock } from '@/entities/stock/types/stock.types';
 
 /**
- * 소켓에서 온 문자열(Raw) 데이터를 숫자로 변환합니다.
- * 값이 존재하는 경우에만 객체에 포함시켜 기존 데이터를 덮어쓰지 않도록 합니다.
- */
-export const transformUpdate = (data: UpdatedStock): Partial<Stock> => {
-  const result: Partial<Stock> = {};
-
-  if (data.price) result.price = parseFloat(data.price);
-  if (data.rate) result.changePercent = parseFloat(data.rate);
-  if (data.volume) result.volume = parseInt(data.volume, 10);
-  if (data.highPrice) result.highPrice = parseFloat(data.highPrice);
-  if (data.lowPrice) result.lowPrice = parseFloat(data.lowPrice);
-  if (data.tradingValue) result.tradingValue = parseFloat(data.tradingValue);
-  if (data.strength) result.strength = parseFloat(data.strength);
-  if (data.rsi) result.rsi = parseFloat(data.rsi);
-  if (data.tradingValueRatio) result.tradingValueRatio = parseFloat(data.tradingValueRatio);
-
-  return result;
-};
-
-/**
- * [Surgical Update] 단일 종목의 전체 데이터를 완성하여 반환합니다.
- * 고정된 값(averageTradingValue)과 실시간 값(tradingValue)을 조합하여 지표를 재계산합니다.
+ * [Surgical Update] 서버에서 완성된 데이터를 받아 단일 종목의 상태를 갱신합니다.
+ * 백엔드에서 모든 지표(RSI, 거래대금 비율 등)를 계산해서 보내주므로 프론트는 단순 덮어쓰기만 수행합니다.
  */
 export const calculateStockUpdate = (
-  currentStock: Stock,
+  currentStock: StockSnapshot,
   updateRaw: UpdatedStock,
   soxxRate: number
-): Stock => {
-  const updatedInfo = transformUpdate(updateRaw);
-
-  // 1. 기본 정보 병합
-  const mergedStock = {
-    ...currentStock,
-    ...updatedInfo,
+): StockSnapshot => {
+  // 1. 서버에서 온 데이터로 가격 및 지표 갱신
+  const mergedPrice = {
+    ...currentStock.price,
+    ...updateRaw.price,
   };
 
-  // 2. 실시간 지표 재계산 (프론트엔드 책임)
+  const mergedIndicators = {
+    ...currentStock.indicators,
+    ...updateRaw.indicators,
+  };
 
-  // 거래대금 비율: (현재 거래대금 / 평균 거래대금) * 100
-  // 만약 소켓에서 직접 내려준다면 그것을 쓰고, 없다면 프론트에서 계산
-  if (!updatedInfo.tradingValueRatio && mergedStock.tradingValue && mergedStock.averageTradingValue) {
-    mergedStock.tradingValueRatio = (mergedStock.tradingValue / mergedStock.averageTradingValue) * 100;
-  }
+  // 2. 상대 변동률만 프론트엔드의 현재 기준(SOXX)으로 계산 (백엔드 부하 경감)
+  mergedIndicators.relativeChange = mergedPrice.changePercent - soxxRate;
 
-  // SOXX 대비 상대 변동률: 현재 등락률 - SOXX 등락률
-  mergedStock.relativeChange = mergedStock.changePercent - soxxRate;
-
-  return mergedStock;
+  return {
+    ...currentStock,
+    price: mergedPrice,
+    indicators: mergedIndicators,
+  };
 };

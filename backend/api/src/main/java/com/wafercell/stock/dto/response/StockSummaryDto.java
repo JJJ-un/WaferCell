@@ -19,5 +19,8 @@ public class StockSummaryDto {
     
     /** 가중 평균 등락률 */
     private Double changePercent;
+
+    /** 거래량 합계 */
+    private Long volume;
     
 }

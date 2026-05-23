@@ -12,14 +12,21 @@ export const TradingVolumeIndicator = () => {
     if (!hoveredTicker) return { tradingValue: 0, tradingValueRatio: 0 };
     const stock = data.stocks[hoveredTicker];
     return {
-      tradingValue: stock?.tradingValue || 0,
-      tradingValueRatio: stock?.tradingValueRatio || 0
+      tradingValue: stock?.indicators.tradingValue || 0,
+      tradingValueRatio: stock?.indicators.tradingValueRatio || 0
     };
   }, !!hoveredTicker).data || {};
 
+  // 백엔드에서 tradingValueRatio는 (현재/평균)*100으로 옴 (예: 100.0 = 100%)
+  // 게이지 시각화를 위해 100%를 중앙(50%)에 배치하는 현재 로직 유지하되, 
+  // 넘치는 부분에 대한 시각적 처리를 강화하거나 단위를 점검합니다.
+  
   const amountInEokDollar = tradingValue / 100_000_000;
   const isActive = tradingValueRatio >= 100;
   const isExplosive = tradingValueRatio >= 200;
+
+  // 게이지 너비 계산 (100%가 중앙에 오도록 /2 유지, 최대 100%)
+  const gaugeWidth = Math.min(tradingValueRatio / 2, 100);
 
   const getStatusColor = () => {
     if (isExplosive) return 'var(--color-trend-up-700)';
@@ -63,7 +70,7 @@ export const TradingVolumeIndicator = () => {
           <div 
             className="absolute left-0 h-full transition-all duration-1000 ease-[cubic-bezier(0.23,1,0.32,1)]"
             style={{ 
-              width: `${Math.min(tradingValueRatio / 2, 100)}%`, 
+              width: `${gaugeWidth}%`, 
               backgroundColor: statusColor,
               boxShadow: isActive ? `0 0 15px ${statusColor}66` : 'none'
             }}

@@ -1,15 +1,17 @@
 package com.wafercell.stock.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 한투 해외 주식 상세 시세 Raw DTO 
+ * 한투 해외 주식 현재가상세 API를 받는 Raw DTO
  */
 @Getter
 @NoArgsConstructor
-public class StockDetailRaw {
+public class KisStockRaw {
+    @JsonAlias({"rslt_prc", "last"})
     @JsonProperty("last")
     private String lastPrice;
 
@@ -19,10 +21,13 @@ public class StockDetailRaw {
     @JsonProperty("diff")
     private String changeAmount;
 
-    @JsonProperty("rate")
+    @JsonProperty("t_xrat")
     private String changeRate;
 
-    @JsonProperty("t_avls")
+    @JsonProperty("t_xsgn")
+    private String sign;
+
+    @JsonProperty("tomv")
     private String marketCap;
 
     @JsonProperty("tvol")
