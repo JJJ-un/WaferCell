@@ -10,8 +10,6 @@ import com.wafercell.stock.service.storage.StockDetailStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,8 +54,8 @@ public class StockService {
                 .map(raw -> StockDailyPriceResponse.builder()
                         .date(formatDate(raw.getDate()))
                         .closePrice(parser.parseSafeDouble(raw.getClosePrice()))
-                        .changeAmount(parser.parseSafeDouble(raw.getChangeAmount()))
-                        .changeRate(parser.parseSafeDouble(raw.getChangeRate()))
+                        .changeAmount(parser.applySign(parser.parseSafeDouble(raw.getChangeAmount()), raw.getSign()))
+                        .changeRate(parser.applySign(parser.parseSafeDouble(raw.getChangeRate()), raw.getSign()))
                         .volume(parser.parseSafeLong(raw.getVolume()))
                         .tradingValue(parser.parseSafeDouble(raw.getTradingValue()))
                         .build())

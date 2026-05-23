@@ -19,6 +19,9 @@ public class StockDailyPriceRaw {
     @JsonProperty("rate")
     private String changeRate;
 
+    @JsonProperty("sign")
+    private String sign;
+
     @JsonProperty("tamt")
     private String tradingValue;
 

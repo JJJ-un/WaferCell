@@ -11,18 +11,30 @@ public class StockApiResponseParser {
     public StockPriceData parseDetail(KisStockRaw raw) {
         if (raw == null) throw new RuntimeException("API 응답 데이터가 없습니다.");
 
+        double changeAmount = applySign(parseSafeDouble(raw.getChangeAmount()), raw.getSign());
+        double changeRate = applySign(parseSafeDouble(raw.getChangeRate()), raw.getSign());
+
         return StockPriceData.builder()
                 .marketCap(parseSafeDouble(raw.getMarketCap()))
                 .lastPrice(parseSafeDouble(raw.getLastPrice()))
                 .basePrice(parseSafeDouble(raw.getBasePrice()))
                 .highPrice(parseSafeDouble(raw.getHighPrice()))
                 .lowPrice(parseSafeDouble(raw.getLowPrice()))
-                .changeAmount(parseSafeDouble(raw.getChangeAmount()))
-                .changeRate(parseSafeDouble(raw.getChangeRate()))
+                .changeAmount(changeAmount)
+                .changeRate(changeRate)
                 .volume(parseSafeLong(raw.getVolume()))
                 .tradingValue(parseSafeDouble(raw.getTradingValue()))
                 .strength(100.0)
                 .build();
+    }
+
+    public double applySign(double value, String sign) {
+        if (sign == null) return value;
+        // 4: 하한, 5: 하락인 경우 마이너스 적용
+        if (sign.equals("4") || sign.equals("5")) {
+            return -Math.abs(value);
+        }
+        return Math.abs(value);
     }
 
     public double parseSafeDouble(String val) {

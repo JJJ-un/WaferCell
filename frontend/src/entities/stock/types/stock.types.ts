@@ -99,3 +99,12 @@ export interface StockNews {
 export interface NewsDetailResponse {
   content: string;
 }
+
+export interface DailyPrice {
+  date: string;
+  closePrice: number;
+  changeAmount: number;
+  changeRate: number;
+  volume: number;
+  tradingValue: number;
+}

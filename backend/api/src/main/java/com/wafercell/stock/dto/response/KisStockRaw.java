@@ -1,5 +1,6 @@
 package com.wafercell.stock.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class KisStockRaw {
+    @JsonAlias({"rslt_prc", "last"})
     @JsonProperty("last")
     private String lastPrice;
 
@@ -19,8 +21,11 @@ public class KisStockRaw {
     @JsonProperty("diff")
     private String changeAmount;
 
-    @JsonProperty("rate")
+    @JsonProperty("t_xrat")
     private String changeRate;
+
+    @JsonProperty("t_xsgn")
+    private String sign;
 
     @JsonProperty("tomv")
     private String marketCap;

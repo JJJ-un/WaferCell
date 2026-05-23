@@ -1,42 +1,36 @@
 import { useQuery } from '@tanstack/react-query'
 import { type ChartPeriod } from '@/shared/type/period.type'
-
-interface ChartData {
-  time: string;
-  value: number;
-}
-
-interface DailyPrice {
-  date: string;
-  price: number;
-  change: number;
-  volume: number;
-}
-
-// API 연동 전 Mock 데이터 생성기
-const getMockData = async (ticker: string, period: ChartPeriod) => {
-  // 로딩 시뮬레이션
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  const chartData: ChartData[] = Array.from({ length: 20 }, (_, i) => ({
-    time: `2025-01-${(i + 1).toString().padStart(2, '0')}`,
-    value: 100 + Math.random() * 50,
-  }));
-
-  const dailyPrices: DailyPrice[] = Array.from({ length: 10 }, (_, i) => ({
-    date: `2025-01-${(20 - i).toString().padStart(2, '0')}`,
-    price: 150 - i * 2,
-    change: Math.random() * 10 - 5,
-    volume: 1000 + Math.floor(Math.random() * 500),
-  }));
-
-  return { chartData, dailyPrices };
-}
+import { fetchDailyPrices } from '@/entities/stock/api/fetchDailyPrices'
 
 export const useChartData = (ticker: string, period: ChartPeriod) => {
   return useQuery({
     queryKey: ['chart', ticker, period],
-    queryFn: () => getMockData(ticker, period),
+    queryFn: async () => {
+      const dailyPrices = await fetchDailyPrices(ticker);
+      
+      // 기간 필터링 로직 (단순 구현: 3개월=90일, 1년=365일 등)
+      const now = new Date();
+      let filterDate = new Date();
+      if (period === '3개월') filterDate.setMonth(now.getMonth() - 3);
+      else if (period === '1년') filterDate.setFullYear(now.getFullYear() - 1);
+      else if (period === '3년') filterDate.setFullYear(now.getFullYear() - 3);
+      else if (period === '10년') filterDate.setFullYear(now.getFullYear() - 10);
+
+      const filteredPrices = dailyPrices.filter(item => new Date(item.date) >= filterDate);
+
+      // 차트용 데이터로 변환 (날짜 오름차순)
+      const chartData = [...filteredPrices]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(item => ({
+          time: item.date,
+          value: item.closePrice,
+        }));
+
+      // 리스트용 데이터 (날짜 내림차순 - 최신순)
+      const sortedDailyPrices = [...filteredPrices].sort((a, b) => b.date.localeCompare(a.date));
+
+      return { chartData, dailyPrices: sortedDailyPrices };
+    },
     staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
   })
 }

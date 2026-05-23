@@ -31,7 +31,7 @@ export const StockTooltip = ({ data, x, y }: StockProps) => {
     // 상태에 따른 컬러 변수 추출
     const isUp = price.changePercent > 0;
     const isDown = price.changePercent < 0;
-    const statusColor = isUp ? 'text-red-400' : isDown ? 'text-blue-400' : 'text-slate-400';
+    const statusColor = isUp ? 'text-trend-up-500' : isDown ? 'text-trend-down-500' : 'text-slate-400';
 
     return (
         <div 
