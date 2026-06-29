@@ -1,0 +1,41 @@
+{
+  "chains": [
+    {
+      "baseTicker": "AMD",
+      "targetTicker": "TSM",
+      "targetCompanyName": "TSMC",
+      "relationType": "SUPPLIER",
+      "description": "AMD의 중앙처리장치(CPU)와 그래픽카드(GPU) 칩셋을 위탁 생산해 주는 최첨단 미세공정 파운드리 공급사입니다."
+    },
+    {
+      "baseTicker": "AMD",
+      "targetTicker": "ASML",
+      "targetCompanyName": "ASML",
+      "relationType": "SUPPLIER",
+      "description": "AMD의 칩 생산 위탁사인 TSMC에 극자외선(EUV) 노광 장비를 독점 공급하는 반도체 핵심 장비 공급망 기업입니다."
+    },
+    {
+      "baseTicker": "AMD",
+      "targetTicker": "NVDA",
+      "targetCompanyName": "NVIDIA",
+      "relationType": "COMPETITOR",
+      "description": "AI 반도체 시장 주도권과 고성능 GPU 리테일 시장에서 AMD와 전면 대립 관계에 있는 핵심 경쟁사입니다."
+    }
+  ],
+  "events": [
+    {
+      "baseTicker": "AMD",
+      "eventName": "ASML 2분기 주요 설비 수주 및 실적 발표",
+      "eventDate": "2026-06-15",
+      "estimatedImpact": "ASML의 노광장비 신규 수주 실적에 따라 TSMC의 차세대 생산 라인 증설 일정이 조율되며, 이는 AMD의 3나노 칩 공급 물량 수급에 영향을 줍니다.",
+      "eventType": "CALENDAR"
+    },
+    {
+      "baseTicker": "AMD",
+      "eventName": "미국 FOMC 연방공개시장위원회 금리 결정 발표",
+      "eventDate": "2026-06-18",
+      "estimatedImpact": "금리 인상 또는 인하 여부에 따라 나스닥 반도체 기술주 전반의 유동성에 즉각적인 영향을 미치며 AMD 주가의 변동폭을 키울 수 있습니다.",
+      "eventType": "CALENDAR"
+    }
+  ]
+}

@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNewsQuery } from '@/shared/model/hooks/useNewsQuery';
+import { useQueryClient } from '@tanstack/react-query';
+import { useStomp } from '@/shared/model/contexts/StompContext';
 
 export const NewsFeed = () => {
+  console.log("📡 [NewsFeed 컴포넌트 렌더링]");
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+  const { isConnected, subscribe } = useStomp();
 
   const {
     data,
@@ -11,7 +16,57 @@ export const NewsFeed = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
+    error,
   } = useNewsQuery();
+
+  // STOMP 실시간 뉴스 토픽 구독 설정
+  useEffect(() => {
+    if (!isConnected) {
+      console.log("📡 [NewsFeed] 웹소켓 미연결 상태 - 구독 대기 중");
+      return;
+    }
+
+    console.log("📡 [NewsFeed] STOMP 뉴스 피드 구독 개시 (/topic/stocks/news)");
+    const subscription = subscribe('/topic/stocks/news', (payload: any) => {
+      try {
+        console.log("📢 [NewsFeed] 실시간 속보 수신:", payload);
+        if (!payload || !payload.id) return;
+
+        queryClient.setQueryData<any>(['stocks', 'news'], (oldData: any) => {
+          if (!oldData) return oldData;
+
+          // 캐시 내 중복 적재 방지 검사
+          const isAlreadyCached = oldData.pages.some((page: any[]) =>
+            page.some((news: any) => news.id === payload.id)
+          );
+          if (isAlreadyCached) return oldData;
+
+          // 0번째 페이지의 맨 처음에 새 뉴스 기사를 주입
+          const updatedPages = [...oldData.pages];
+          if (updatedPages.length > 0) {
+            updatedPages[0] = [payload, ...updatedPages[0]];
+          } else {
+            updatedPages[0] = [payload];
+          }
+
+          return {
+            ...oldData,
+            pages: updatedPages,
+          };
+        });
+      } catch (err) {
+        console.error("❌ [NewsFeed] 실시간 속보 수신 중 에러:", err);
+      }
+    });
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+        console.log("🔌 [NewsFeed] STOMP 뉴스 피드 구독 해제 완료");
+      }
+    };
+  }, [isConnected, subscribe, queryClient]);
 
   // 스크롤 감지를 위한 Intersection Observer 설정
   useEffect(() => {
@@ -37,6 +92,16 @@ export const NewsFeed = () => {
 
   if (isLoading) return <div className="flex items-center justify-center w-full p-4 text-slate-400">뉴스를 불러오는 중...</div>;
 
+  if (isError) {
+    console.error("🚨 [NewsFeed 렌더링 에러] 뉴스 쿼리 실패:", error);
+    return (
+      <div className="flex flex-col items-center justify-center w-full p-6 text-red-400 bg-red-500/10 rounded-lg border border-red-500/20">
+        <span className="font-semibold mb-2">뉴스를 불러오지 못했습니다.</span>
+        <span className="text-xs text-slate-400 text-center">{(error as Error)?.message || "알 수 없는 에러가 발생했습니다."}</span>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col w-full rounded-lg overflow-hidden">
       <div className="flex justify-between items-center mb-4">
@@ -61,9 +126,11 @@ export const NewsFeed = () => {
                 <span className="font-medium text-secondary">{news.source}</span>
                 <span>•</span>
                 <span>
-                  {news.time && news.time.length >= 4 
-                    ? `${news.time.substring(0, 2)}:${news.time.substring(2, 4)}` 
-                    : news.time || '--:--'}
+                  {news.time && news.time.includes(':')
+                    ? news.time
+                    : news.time && news.time.length >= 4 
+                      ? `${news.time.substring(0, 2)}:${news.time.substring(2, 4)}` 
+                      : news.time || '--:--'}
                 </span>
               </div>
             </div>

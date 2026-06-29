@@ -96,7 +96,7 @@ public class StockDataSyncService {
                 
                 // 8. 캐시에 업데이트된 정보 저장
                 stockDetailStore.update(ticker, node);
-                Thread.sleep(100);
+                Thread.sleep(500); // 💡 한투 API 초당 호출제한(Rate Limit) 방지를 위해 대기 시간을 500ms로 상향 조정
             } catch (Exception e) {
                 log.error("데이터 동기화 실패: {} - {}", ticker, e.getMessage());
                 stockDetailStore.update(ticker, stockMapper.toFallbackSnapshot(stock));

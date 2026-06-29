@@ -1,30 +1,141 @@
 import { SimpleChart } from "@/widgets/SimpleChart"
 import Selector from "@/shared/ui/selector/Selector"
 import { type ChartPeriod } from "@/shared/type/period.type"
-import { useState } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import { DailyPriceList } from "@/widgets/DailyPriceList";
-import { useParams } from "@tanstack/react-router";
+import { useParams, createFileRoute } from "@tanstack/react-router";
+import { NewsEventContext } from "../__root";
 import { useChartData } from "@/features/stock-chart/hook/useChartData";
-import { createFileRoute } from "@tanstack/react-router";
+import { useRealtimeChart } from "@/features/stock-chart/hook/useRealtimeChart";
+import { useInfiniteDailyPrices } from "@/features/daily-prices/hooks/useInfiniteDailyPrices";
+
+// 일지 기능 연동을 위해 임포트
+import { useJournalQueries, type JournalResponseDto } from "@/features/stock-journal/hooks/useJournalQueries";
+import { JournalDrawer } from "@/widgets/journal/JournalDrawer";
 
 export const Chart = () => {
-    const { ticker } = useParams({ from: '/chart/$ticker' });
-    const [selectedPeriod, setSelectedPeriod] = useState<ChartPeriod>('3개월');
+    const { ticker } = useParams({ from: '/chart/$ticker' }) as { ticker: string };
+    const [selectedPeriod, setSelectedPeriod] = useState<ChartPeriod>('일');
+    const { events } = useContext(NewsEventContext);
 
-    const { data, isLoading } = useChartData(ticker, selectedPeriod);
+    // 1. 투자 일지 쿼리 및 드로워 상태 선언
+    const { tickerJournals, refetchTicker } = useJournalQueries(ticker);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [selectedJournalDate, setSelectedJournalDate] = useState<string | undefined>(undefined);
+    const [selectedJournal, setSelectedJournal] = useState<JournalResponseDto | undefined>(undefined);
 
-    if (isLoading) return <div className="p-24">차트 데이터를 불러오는 중...</div>;
-    if (!data) return <div className="p-24">데이터가 없습니다.</div>;
+    const { data: chartResponse, isLoading: isChartLoading } = useChartData(ticker, selectedPeriod);
+
+    // 실시간 웹소켓 시세 반영 연동
+    useRealtimeChart(ticker, selectedPeriod);
+
+    const {
+        data: priceResponse,
+        isLoading: isPriceLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteDailyPrices(ticker);
+
+    const observerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const currentTarget = observerRef.current;
+        if (!currentTarget || !hasNextPage || isFetchingNextPage) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                fetchNextPage();
+            }
+        }, { threshold: 0.1 });
+
+        observer.observe(currentTarget);
+        return () => {
+            observer.disconnect();
+        };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage, priceResponse]);
+
+    // 드로워가 닫힐 때 최신 일지 목록을 리프레시
+    const handleDrawerClose = () => {
+        setIsDrawerOpen(false);
+        setSelectedJournal(undefined);
+        setSelectedJournalDate(undefined);
+        refetchTicker();
+    };
+
+    // 차트의 일지 마커 클릭 시의 핸들러
+    const handleJournalClick = (date: string) => {
+        const matched = tickerJournals.find(j => j.journalDate === date);
+        if (matched) {
+            setSelectedJournal(matched);
+            setSelectedJournalDate(date);
+        } else {
+            setSelectedJournal(undefined);
+            setSelectedJournalDate(date);
+        }
+        setIsDrawerOpen(true);
+    };
+
+    // 신규 작성 버튼 핸들러
+    const handleNewJournalClick = () => {
+        setSelectedJournal(undefined);
+        setSelectedJournalDate(undefined);
+        setIsDrawerOpen(true);
+    };
+
+    if (isChartLoading || isPriceLoading) return <div className="p-24">데이터를 불러오는 중...</div>;
+    if (!chartResponse || !priceResponse) return <div className="p-24">데이터가 없습니다.</div>;
+
+    const flatDailyPrices = priceResponse?.pages?.flat() || [];
 
     return (
         <div className="p-[24px] flex flex-col gap-[24px]">
-            <Selector selected={selectedPeriod} onSelect={setSelectedPeriod} />
-            <SimpleChart chartData={data.chartData} />
-            <DailyPriceList dailyPrices={data.dailyPrices} />
+            {/* 좌측 영역 (데이터 흐름) */}
+            <div className="bg-primary border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-lg">
+                <div className="flex justify-between items-center">
+                    <Selector selected={selectedPeriod} onSelect={setSelectedPeriod} />
+                    
+                    {/* 투자 일지 신규 작성 버튼 */}
+                    <button
+                        onClick={handleNewJournalClick}
+                        className="bg-[#A2FF00] hover:bg-[#8BD800] text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-500/10 active:scale-95"
+                    >
+                        <span>✏️</span> 일지 작성
+                    </button>
+                </div>
+                
+                {/* 차트에 일지 이벤트(B/S/M 마커)와 클릭 이벤트 바인딩 */}
+                <SimpleChart 
+                    chartData={chartResponse.chartData} 
+                    newsEvents={events} 
+                    journalEvents={tickerJournals}
+                    period={selectedPeriod} 
+                    onJournalClick={handleJournalClick}
+                />
+
+                {/* 일별 시세 리스트 및 자체 뷰포트 무한 스크롤 감지 결합 */}
+                <div className="flex flex-col">
+                    <DailyPriceList dailyPrices={flatDailyPrices}>
+                        {/* 감지선 엘리먼트가 테이블 내부 스크롤 영역 최하단에 삽입됨 */}
+                        <div ref={observerRef} className="h-10 flex items-center justify-center text-sm text-gray-400 mt-[12px] border-t border-dotted border-slate-200 pt-[12px]">
+                            {isFetchingNextPage ? "시세를 더 불러오는 중..." : hasNextPage ? "스크롤하여 시세 더 보기" : "마지막 시세입니다."}
+                        </div>
+                    </DailyPriceList>
+                </div>
+            </div>
+
+            {/* 일지 작성/상세 드로워 마운트 */}
+            <JournalDrawer
+                isOpen={isDrawerOpen}
+                onClose={handleDrawerClose}
+                ticker={ticker}
+                initialDate={selectedJournalDate}
+                existingJournal={selectedJournal}
+            />
         </div>
     )
 }
 
 export const Route = createFileRoute('/chart/$ticker')({
-  component: Chart,
+    component: Chart,
 });

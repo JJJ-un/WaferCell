@@ -1,1 +1,1 @@
-export type ChartPeriod = '3개월' | '1년' | '3년' | '10년';
+export type ChartPeriod = '1분' | '5분' | '일' | '주' | '월' | '년';

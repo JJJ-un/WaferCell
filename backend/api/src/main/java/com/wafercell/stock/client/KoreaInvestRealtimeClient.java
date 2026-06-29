@@ -76,8 +76,6 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
                     this.session = newSession;
                     isConnecting.set(false);
                     log.info("✅ 실시간 서버 연결 성공: {}", wsUrl);
-                    // 연결 성공 이벤트 발행
-                    eventPublisher.publishEvent(new RealtimeServerConnectedEvent(this));
                 }).exceptionally(ex -> {
                     isConnecting.set(false);
                     log.error("❌ 실시간 서버 연결 실패: {}", ex.getMessage());
@@ -143,7 +141,8 @@ public class KoreaInvestRealtimeClient extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         this.session = session;
-        log.info("웹소켓 연결 확립됨.");
+        log.info("웹소켓 연결 확립됨. 연결 성공 이벤트 발행");
+        eventPublisher.publishEvent(new RealtimeServerConnectedEvent(this));
     }
 
     // 한투 실시간 데이터 규격 관련 상수

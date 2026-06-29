@@ -13,5 +13,7 @@ public class NewsDto {
     private String time;
     private String title;
     private String source;
+    private String description; // 💡 AI 정밀 분석을 위한 기사 요약 설명 필드 추가
     private List<String> tickers;
 }
+
