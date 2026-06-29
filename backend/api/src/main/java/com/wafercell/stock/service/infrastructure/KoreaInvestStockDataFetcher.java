@@ -3,6 +3,7 @@ package com.wafercell.stock.service.infrastructure;
 import com.wafercell.global.dto.KoreaInvestRawResponse;
 import com.wafercell.stock.client.KoreaInvestStockClient;
 import com.wafercell.stock.dto.response.StockDailyPriceRaw;
+import com.wafercell.stock.dto.response.StockMinutePriceRaw;
 import com.wafercell.stock.dto.response.KisStockRaw;
 import com.wafercell.stock.dto.response.StockPriceData;
 import com.wafercell.stock.entity.Stock;
@@ -58,7 +59,18 @@ public class KoreaInvestStockDataFetcher implements StockDataFetcher {
 
     @Override
     public List<StockDailyPriceRaw> fetchDailyPriceRawList(Stock stock) {
-        KoreaInvestRawResponse<StockDailyPriceRaw> response = stockClient.getDailyPrice(stock.getExchange(), stock.getTicker());
+        return fetchDailyPriceRawList(stock, "0");
+    }
+
+    @Override
+    public List<StockDailyPriceRaw> fetchDailyPriceRawList(Stock stock, String gubn) {
+        KoreaInvestRawResponse<StockDailyPriceRaw> response = stockClient.getDailyPrice(stock.getExchange(), stock.getTicker(), gubn);
+        return response.getOutput2() != null ? response.getOutput2() : Collections.emptyList();
+    }
+
+    @Override
+    public List<StockMinutePriceRaw> fetchMinutePriceRawList(Stock stock, String nmin) {
+        KoreaInvestRawResponse<StockMinutePriceRaw> response = stockClient.getOverseasStockMinutes(stock.getExchange(), stock.getTicker(), nmin);
         return response.getOutput2() != null ? response.getOutput2() : Collections.emptyList();
     }
 }

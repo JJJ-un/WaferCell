@@ -1,21 +1,173 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRootRoute, Outlet, useParams, useRouterState } from '@tanstack/react-router'
 import { Header } from '@/shared/ui/header/Header'
+import { ValueChainList } from '../widgets/value-chain/ValueChainList'
 import { NewsFeed } from '../widgets/news-feed/NewsFeed'
+import { TickerNewsList } from '../widgets/news-feed/TickerNewsList'
+import { useState, useEffect, createContext } from 'react'
+
+interface StreamEvent {
+  type: 'CALENDAR' | 'REALTIME_IMPACT';
+  title: string;
+  date: string;
+  score?: number;
+  briefing: string[];
+}
+
+export const NewsEventContext = createContext<{ events: StreamEvent[] }>({ events: [] });
+
+/**
+ * 전역 레이아웃 컴포넌트
+ * 종목 상세 진입 시 '실시간 글로벌 속보'와 '종목 뉴스'를 전환해 볼 수 있는 탭 스위칭을 제공합니다.
+ */
+const RootComponent = () => {
+  const { ticker } = useParams({ strict: false }) as { ticker?: string };
+  const [events, setEvents] = useState<StreamEvent[]>([]);
+  const [connected, setConnected] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'STREAM' | 'NEWS'>('STREAM'); // 탭 선택 상태 추가
+
+  // 현재 라우트 경로 감지 (다이어리 페이지 여부 식별용)
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDiaryPage = pathname.startsWith('/diary');
+
+  // 종목(ticker)이 변경되면 기본적으로 '글로벌 속보' 탭을 띄우도록 설정
+  useEffect(() => {
+    setActiveTab('STREAM');
+  }, [ticker]);
+
+  // 백그라운드에서도 실시간 속보 수집 및 AI 분석 카드가 누적되도록 최상위에서 SSE 연결을 관리합니다.
+  useEffect(() => {
+    if (!ticker) {
+      setEvents([]);
+      setConnected(false);
+      return;
+    }
+
+    setEvents([]);
+    setConnected(false);
+
+    const eventSource = new EventSource(`/api/stocks/${ticker.toUpperCase()}/value-chain/stream`);
+
+    eventSource.addEventListener('connect', () => {
+      setConnected(true);
+    });
+
+    eventSource.addEventListener('calendar-event', (e) => {
+      try {
+        const newEvent = JSON.parse(e.data) as StreamEvent;
+        setEvents((prev) => {
+          if (prev.some((item) => item.title === newEvent.title && item.type === 'CALENDAR')) {
+            return prev;
+          }
+          return [...prev, newEvent];
+        });
+      } catch (err) {
+        console.error('사전 일정 파싱 오류', err);
+      }
+    });
+
+    eventSource.addEventListener('realtime-impact', (e) => {
+      try {
+        const newEvent = JSON.parse(e.data) as StreamEvent;
+        setEvents((prev) => {
+          if (prev.some((item) => item.title === newEvent.title && item.type === 'REALTIME_IMPACT')) {
+            return prev;
+          }
+          return [newEvent, ...prev];
+        });
+      } catch (err) {
+        console.error('실시간 분석 파싱 오류', err);
+      }
+    });
+
+    eventSource.onerror = () => {
+      setConnected(false);
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [ticker]);
+
+  return (
+    <div className="flex flex-col bg-background text-ink-main min-h-screen">
+      <Header />
+      <div className="flex">
+        <div className="flex-1">
+          <NewsEventContext.Provider value={{ events }}>
+            <Outlet />
+          </NewsEventContext.Provider>
+        </div>
+
+        {/* 우측 실시간 속보 타임라인 패널 - 다이어리 페이지(/diary)일 경우 숨김 처리 */}
+        {!isDiaryPage && (
+          <div className="w-[340px] bg-primary flex flex-col h-[795px] p-6 mt-[24px] mr-[24px] rounded-lg border border-slate-200/40 shadow-md">
+            
+            {ticker ? (
+              <>
+                {/* 우측 패널용 탭 헤더 컴포넌트 */}
+                <div className="flex border-b border-slate-200/60 mb-5 text-xs font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('STREAM')}
+                    className={`flex-1 pb-2.5 border-b-2 transition cursor-pointer text-center
+                      ${activeTab === 'STREAM'
+                        ? 'border-blue-500 text-blue-600 font-extrabold'
+                        : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  >
+                    글로벌 속보
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('NEWS')}
+                    className={`flex-1 pb-2.5 border-b-2 transition cursor-pointer text-center
+                      ${activeTab === 'NEWS'
+                        ? 'border-blue-500 text-blue-600 font-extrabold'
+                        : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                  >
+                    종목 뉴스
+                  </button>
+                </div>
+
+                {activeTab === 'STREAM' ? (
+                  <>
+                    <div className="flex flex-col gap-1 mb-5">
+                      <h3 className="text-sm font-extrabold text-foreground flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-505"></span>
+                        </span>
+                        실시간 글로벌 속보 피드
+                      </h3>
+                      <p className="text-[10px] text-slate-400">해외 공시 및 외신 실시간 AI 요약 스트리밍</p>
+                    </div>
+
+                    {/* 실시간 속보 타임라인 렌더링 컨테이너 */}
+                    <div className="flex-1 overflow-y-auto w-full scrollbar-hide">
+                      <ValueChainList
+                        ticker={ticker}
+                        events={events}
+                        connected={connected}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  // 종목 관련 한글 뉴스 리스트 렌더링 영역
+                  <div className="flex-1 overflow-y-auto w-full scrollbar-hide">
+                    <TickerNewsList ticker={ticker} />
+                  </div>
+                )}
+              </>
+            ) : (
+              // 대시보드(ticker가 없을 때)의 일반 해외 속보 피드 노출
+              <NewsFeed />
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export const Route = createRootRoute({
-  component: () => (
-    <>
-      <div className="flex flex-col bg-background text-ink-main min-h-screen">
-        <Header />
-        <div className="flex">
-          <div className="flex-1">
-            <Outlet />
-          </div>
-          <div className="w-[340px] bg-primary flex flex-col items-center h-[795px] p-6 mt-[24px] mr-[24px] rounded-lg">
-            <NewsFeed/>
-          </div>
-        </div>
-      </div>
-    </>
-  ),
+  component: RootComponent,
 })

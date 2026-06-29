@@ -3,5 +3,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.jsoup:jsoup:1.17.2' // HTML 본문 파싱용
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
