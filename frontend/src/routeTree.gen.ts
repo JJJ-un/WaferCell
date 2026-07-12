@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DiaryIndexRouteImport } from './routes/diary/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as ChartTickerRouteImport } from './routes/chart/$ticker'
+import { Route as StockTickerRouteImport } from './routes/stock/$ticker'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,42 +29,42 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/dashboard/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChartTickerRoute = ChartTickerRouteImport.update({
-  id: '/chart/$ticker',
-  path: '/chart/$ticker',
+const StockTickerRoute = StockTickerRouteImport.update({
+  id: '/stock/$ticker',
+  path: '/stock/$ticker',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chart/$ticker': typeof ChartTickerRoute
+  '/stock/$ticker': typeof StockTickerRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/diary/': typeof DiaryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chart/$ticker': typeof ChartTickerRoute
+  '/stock/$ticker': typeof StockTickerRoute
   '/dashboard': typeof DashboardIndexRoute
   '/diary': typeof DiaryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/chart/$ticker': typeof ChartTickerRoute
+  '/stock/$ticker': typeof StockTickerRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/diary/': typeof DiaryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chart/$ticker' | '/dashboard/' | '/diary/'
+  fullPaths: '/' | '/stock/$ticker' | '/dashboard/' | '/diary/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chart/$ticker' | '/dashboard' | '/diary'
-  id: '__root__' | '/' | '/chart/$ticker' | '/dashboard/' | '/diary/'
+  to: '/' | '/stock/$ticker' | '/dashboard' | '/diary'
+  id: '__root__' | '/' | '/stock/$ticker' | '/dashboard/' | '/diary/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ChartTickerRoute: typeof ChartTickerRoute
+  StockTickerRoute: typeof StockTickerRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DiaryIndexRoute: typeof DiaryIndexRoute
 }
@@ -92,11 +92,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chart/$ticker': {
-      id: '/chart/$ticker'
-      path: '/chart/$ticker'
-      fullPath: '/chart/$ticker'
-      preLoaderRoute: typeof ChartTickerRouteImport
+    '/stock/$ticker': {
+      id: '/stock/$ticker'
+      path: '/stock/$ticker'
+      fullPath: '/stock/$ticker'
+      preLoaderRoute: typeof StockTickerRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -104,7 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ChartTickerRoute: ChartTickerRoute,
+  StockTickerRoute: StockTickerRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DiaryIndexRoute: DiaryIndexRoute,
 }

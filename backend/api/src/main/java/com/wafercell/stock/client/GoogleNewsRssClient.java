@@ -58,6 +58,54 @@ public class GoogleNewsRssClient {
         return items;
     }
 
+    public List<RssItem> fetchNewsRssKorean(String query, int limit) {
+        List<RssItem> items = new ArrayList<>();
+        try {
+            String url = String.format("https://news.google.com/rss/search?q=%s&hl=ko&gl=KR&ceid=KR:ko", query.trim());
+            String xmlResponse = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(String.class);
+
+            if (xmlResponse == null || xmlResponse.isEmpty()) {
+                return items;
+            }
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8)));
+
+            NodeList nodeList = doc.getElementsByTagName("item");
+            for (int i = 0; i < Math.min(nodeList.getLength(), limit); i++) {
+                Element element = (Element) nodeList.item(i);
+                RssItem item = new RssItem();
+                item.setTitle(cleanHtml(getTagValue("title", element)));
+                item.setLink(getTagValue("link", element));
+                item.setPubDate(getTagValue("pubDate", element));
+                item.setSource(getTagValue("source", element));
+                item.setDescription(cleanHtml(getTagValue("description", element)));
+                items.add(item);
+            }
+        } catch (Exception e) {
+            log.error("💥 Google News RSS 한글 수집 실패 (쿼리: {}): {}", query, e.getMessage(), e);
+        }
+        return items;
+    }
+
+    private String cleanHtml(String text) {
+        if (text == null) return "";
+        return text.replaceAll("<[^>]*>", "")
+                .replace("&quot;", "\"")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&apos;", "'")
+                .replace("`", "'")
+                .replace("&nbsp;", " ")
+                .trim();
+    }
+
     private String getTagValue(String tag, Element element) {
         NodeList nodeList = element.getElementsByTagName(tag);
         if (nodeList.getLength() > 0) {

@@ -54,7 +54,7 @@ export const StandardHeatmap = () => {
             <g 
               key={stock.base.ticker || i} 
               transform={`translate(${d.x0},${d.y0})`}
-              onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.base.ticker } })}
+              onClick={() => navigate({ to: '/stock/$ticker', params: { ticker: stock.base.ticker } })}
               onMouseEnter={() => {
                 setHoveredPosition({ x: d.x0 + rectWidth / 2, y: d.y0 + rectHeight / 2 });
                 setHoveredTicker(stock.base.ticker);

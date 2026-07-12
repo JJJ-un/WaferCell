@@ -65,6 +65,15 @@ public class InvestmentJournalService {
     }
 
     /**
+     * 전체 종목의 일지 목록을 페이징하여 최신 날짜 역순으로 조회합니다.
+     */
+    public List<JournalResponse> getAllJournalsPaged(org.springframework.data.domain.Pageable pageable) {
+        return journalRepository.findAllByOrderByJournalDateDesc(pageable).getContent().stream()
+                .map(JournalResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 특정 투자 일지를 삭제합니다.
      */
     @Transactional

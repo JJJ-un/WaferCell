@@ -49,8 +49,11 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    const chart = createChart(chartContainerRef.current, {
-      width: 560,
+    const container = chartContainerRef.current;
+    const initialWidth = container.clientWidth || 560;
+
+    const chart = createChart(container, {
+      width: initialWidth,
       height: 300,
       layout: {
         background: { type: ColorType.Solid, color: '#ffffff' }, // 배경색
@@ -172,7 +175,15 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
       }
     });
 
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (entries.length === 0 || !entries[0].contentRect) return;
+      const { width } = entries[0].contentRect;
+      chart.resize(width, 300);
+    });
+    resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.disconnect();
       chart.remove();
       chartApiRef.current = null;
       seriesRef.current = null;
@@ -249,6 +260,6 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
   }, [newsEvents, journalEvents, chartData]);
 
   return (
-    <div ref={chartContainerRef} className="overflow-hidden [&_a]:hidden" />
+    <div ref={chartContainerRef} className="w-full overflow-hidden [&_a]:hidden" />
   );
 };

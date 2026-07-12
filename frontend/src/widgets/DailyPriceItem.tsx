@@ -5,13 +5,13 @@ import { useParams } from "@tanstack/react-router";
 import { apiClient } from "@/shared/api/apiClient";
 
 interface NewsEvent {
-  id: number;
-  eventName: string;
-  eventDate: string;
-  estimatedImpact: string; // "||"로 조인된 브리핑 문자열
-  eventType: string;
-  score?: number;
-  newsUrl?: string;
+    id: number;
+    eventName: string;
+    eventDate: string;
+    estimatedImpact: string; // "||"로 조인된 브리핑 문자열
+    eventType: string;
+    score?: number;
+    newsUrl?: string;
 }
 
 export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
@@ -50,17 +50,8 @@ export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
     return (
         <>
             <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 select-none">
-                <div className="w-24 text-gray-500 flex items-center gap-1.5">
-                    <span>{date}</span>
-                    {Math.abs(changeRate) >= 3.0 && (
-                        <button 
-                            onClick={handleAnalyzeClick}
-                            title="당일 속보 이슈 보기"
-                            className="text-[9px] hover:scale-110 active:scale-95 bg-indigo-50 hover:bg-indigo-100/90 text-indigo-500 hover:text-indigo-600 font-extrabold px-1 py-0.5 rounded cursor-pointer transition-all border border-indigo-100 flex items-center justify-center shrink-0"
-                        >
-                            📝
-                        </button>
-                    )}
+                <div className="w-24 text-gray-500">
+                    {date}
                 </div>
                 <div className="w-24 text-right font-semibold text-foreground">
                     {closePrice.toLocaleString()}
@@ -71,50 +62,63 @@ export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
                 <div className="w-32 text-right text-gray-500">
                     {volume.toLocaleString()}
                 </div>
+                <div className="w-24 flex items-center justify-center">
+                    {Math.abs(changeRate) >= 3.0 ? (
+                        <button
+                            onClick={handleAnalyzeClick}
+                            title="당일 속보 이슈 보기"
+                            className="text-[12px] hover:scale-105 active:scale-95 bg-indigo-50 hover:bg-indigo-100/90 text-indigo-500 hover:text-indigo-600 px-2 py-1 rounded cursor-pointer transition-all border border-indigo-100 flex items-center justify-center gap-1 shrink-0 shadow-xs"
+                        >
+                            <span>분석</span>
+                        </button>
+                    ) : (
+                        <span className="text-[11px] text-slate-300">-</span>
+                    )}
+                </div>
             </div>
 
             {/* 과거 이슈 분석 모달 (React Portal로 Stacking Context 가둠 현상 원천 해결) */}
             {isModalOpen && createPortal(
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
-                    <div className="bg-white border border-slate-200 w-full max-w-[400px] rounded-2xl shadow-xl flex flex-col max-h-[500px] overflow-hidden">
-                        
+                <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fadeIn">
+                    <div className="bg-white border border-slate-200 w-full max-w-2xl rounded-2xl shadow-xl flex flex-col max-h-[75vh] overflow-hidden">
+
                         {/* 모달 헤더 */}
-                        <div className="flex justify-between items-center p-[20px] border-b border-slate-100 bg-slate-50/50">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
                             <div className="flex flex-col gap-0.5">
-                                <h3 className="text-xs font-black text-slate-800">당일 속보 이슈 분석</h3>
-                                <span className="text-[10px] text-slate-400 font-semibold">{ticker?.toUpperCase()} | {date}</span>
+                                <h3 className="text-lg font-bold text-slate-800">당일 속보 이슈 분석</h3>
+                                <span className="text-xs text-slate-400 font-semibold">{ticker?.toUpperCase()} | {date}</span>
                             </div>
                             <button 
                                 onClick={() => setIsModalOpen(false)}
-                                className="text-slate-400 hover:text-slate-600 font-bold text-sm cursor-pointer p-1"
+                                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 text-lg cursor-pointer transition"
                             >
-                                ✕
+                                &times;
                             </button>
                         </div>
 
                         {/* 모달 바디 */}
-                        <div className="flex-1 overflow-y-auto p-[20px] scrollbar-hide">
+                        <div className="flex-1 overflow-y-auto p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                             {isLoading ? (
-                                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                                    <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-[10px] text-slate-400 animate-pulse font-semibold">당시 시장 이슈 불러오는 중...</span>
+                                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                                    <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                    <span className="text-xs text-slate-400 animate-pulse font-semibold">당시 시장 이슈 불러오는 중...</span>
                                 </div>
                             ) : events.length === 0 ? (
-                                <div className="text-center py-10 text-slate-400 text-[11px] font-medium italic">
+                                <div className="text-center py-16 text-slate-400 text-xs font-medium italic">
                                     이날 수집된 유의미한 시장 속보가 없습니다.
                                 </div>
                             ) : (
-                                <div className="flex flex-col gap-4">
+                                <div className="flex flex-col gap-5">
                                     {events.map((event) => (
-                                        <div key={event.id} className="border border-slate-100 rounded-xl p-4 bg-slate-50/30">
-                                            <h4 className="text-[11px] font-bold text-slate-800 mb-2.5 leading-snug">
+                                        <div key={event.id} className="border border-slate-100 rounded-xl p-5 bg-slate-50/30">
+                                            <h4 className="text-sm font-semibold text-slate-900 mb-3 leading-snug">
                                                 {event.eventName}
                                             </h4>
-                                            <ul className="flex flex-col gap-2">
+                                            <ul className="flex flex-col gap-2.5">
                                                 {event.estimatedImpact.split("||").map((bullet, idx) => (
                                                     <li 
                                                         key={idx}
-                                                        className="text-[10px] text-slate-600 leading-relaxed pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-[6px] before:w-[3px] before:h-[3px] before:rounded-full before:bg-slate-400"
+                                                        className="text-xs text-slate-600 leading-relaxed pl-3.5 relative before:content-[''] before:absolute before:left-0 before:top-[8px] before:w-[3px] before:h-[3px] before:rounded-full before:bg-slate-400"
                                                     >
                                                         {bullet}
                                                     </li>
@@ -127,10 +131,10 @@ export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
                         </div>
 
                         {/* 모달 푸터 */}
-                        <div className="p-[16px] border-t border-slate-100 bg-slate-50/50 flex justify-end">
+                        <div className="p-4 border-t border-slate-50 bg-slate-50 flex justify-end">
                             <button 
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 bg-slate-800 text-white font-bold text-[10px] rounded-lg hover:bg-slate-900 transition-colors cursor-pointer"
+                                className="px-6 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 text-sm cursor-pointer transition"
                             >
                                 닫기
                             </button>

@@ -15,6 +15,7 @@ export const DailyPriceList = ({ dailyPrices, children }: DailyPriceListProps) =
                 <span className="w-24 text-right">종가</span>
                 <span className="w-40 text-right">등락</span>
                 <span className="w-32 text-right">거래량</span>
+                <span className="w-24 text-center">이슈</span>
             </div>
             {/* 고정 높이 400px 및 Y축 자체 스크롤 활성화 영역 */}
             <div className="flex flex-col max-h-[400px] overflow-y-auto pr-[8px] scrollbar-hide">

@@ -14,4 +14,5 @@ public class RssItem {
     private String link;
     private String pubDate;
     private String source;
+    private String description;
 }

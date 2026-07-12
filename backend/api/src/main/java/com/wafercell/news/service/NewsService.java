@@ -1,15 +1,12 @@
 package com.wafercell.news.service;
 
 import com.wafercell.news.dto.NewsDto;
-import com.wafercell.news.entity.NewsItem;
-import com.wafercell.news.repository.NewsItemRepository;
-import com.wafercell.stock.entity.Stock;
-import com.wafercell.stock.repository.StockRepository;
+import com.wafercell.news.entity.News;
+import com.wafercell.news.repository.NewsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -17,84 +14,71 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 일반 뉴스 피드 제공 서비스 레이어.
- * 기존의 동기식 포털 API 조회를 완전히 걷어내고, 백그라운드에서 주기적으로
- * 적재한 로컬 DB(NewsItem)로부터 초고속 페이징 조회를 수행합니다.
+ * 해외 주식 뉴스 제공 서비스 레이어.
+ * 기존의 네이버 DB 캐싱 및 실시간 구글 RSS 호출 방식을 걷어내고, 
+ * 백그라운드 스케줄러가 수집 및 저장한 DB의 뉴스 테이블 데이터를 페이징 조회하여 반환합니다.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class NewsService {
 
-    private final NewsItemRepository newsItemRepository;
-    private final StockRepository stockRepository;
+    private final NewsRepository newsRepository;
 
     /**
-     * 뉴스 목록을 로컬 DB로부터 페이징 조회합니다.
-     * @param start 1-based 오프셋 (1, 16, 31 ...)
+     * 메인 대시보드용 해외 금융/반도체 뉴스 조회 (DB 페이징 조회)
      */
     public List<NewsDto> getNews(int start) {
         try {
-            log.info("📡 [NewsService] DB 뉴스 페이징 쿼리 실행 (start: {})", start);
+            // start는 1-based index (예: 1, 16, 31...)
+            // 15개 단위 페이징을 위해 page 번호 환산: (start - 1) / 15
+            int page = Math.max(0, (start - 1) / 15);
+            log.info("📡 [NewsService] 메인 뉴스 DB 조회 - start: {}, page: {}", start, page);
 
-            // Naver API 호환성 유지를 위해 1-based offset(1, 16, 31...)을 PageNumber로 환산 (size = 15)
-            int pageNumber = Math.max(0, (start - 1) / 15);
-            Pageable pageable = PageRequest.of(pageNumber, 15);
-
-            Page<NewsItem> newsPage = newsItemRepository.findAllByOrderByCreatedAtDesc(pageable);
-
-            return newsPage.getContent().stream().map(item -> 
-                NewsDto.builder()
-                        .id(item.getLinkHash())
-                        .newsOferEntpCode("NAVER")
-                        .date(item.getDate())
-                        .time(item.getTime())
-                        .title(item.getTitle())
-                        .source(item.getSource())
-                        .description(item.getDescription())
-                        .tickers(Collections.emptyList())
-                        .build()
-            ).collect(Collectors.toList());
+            Page<News> newsPage = newsRepository.findByTickerIsNullOrderByDateDescTimeDesc(PageRequest.of(page, 15));
+            return newsPage.getContent().stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("💾 [NewsService] 로컬 DB 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
+            log.error("💥 [NewsService] 메인 뉴스 조회 중 오류 발생: {}", e.getMessage(), e);
             return Collections.emptyList();
         }
     }
 
     /**
-     * 특정 종목(ticker)에 해당하는 기사를 DB에서 LIKE 검색하여 반환합니다.
-     * AI 분석 서비스 등에서 호출됩니다.
+     * 특정 종목(ticker)에 해당하는 기사를 DB에서 조회하여 반환합니다. (최대 10개)
      */
     public List<NewsDto> getNewsByTicker(String ticker) {
+        String upperTicker = ticker.trim().toUpperCase();
         try {
-            log.info("📡 [NewsService] 종목 상세 뉴스 DB LIKE 검색 실행 (ticker: {})", ticker);
+            log.info("📡 [NewsService] 종목 '{}' 뉴스 DB 조회", upperTicker);
 
-            // 1. StockRepository에서 회사 한글명 조회 (예: NVDA -> 엔비디아)
-            Stock stock = stockRepository.findByTicker(ticker).orElse(null);
-            String keyword = (stock != null) ? stock.getName() : ticker;
-
-            // 2. DB에서 키워드로 LIKE 검색 (최신 10개 추출)
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<NewsItem> newsPage = newsItemRepository
-                    .findByTitleContainingOrDescriptionContainingOrderByCreatedAtDesc(keyword, keyword, pageable);
-
-            return newsPage.getContent().stream().map(item -> 
-                NewsDto.builder()
-                        .id(item.getLinkHash())
-                        .newsOferEntpCode("NAVER")
-                        .date(item.getDate())
-                        .time(item.getTime())
-                        .title(item.getTitle())
-                        .source(item.getSource())
-                        .description(item.getDescription())
-                        .tickers(List.of(ticker))
-                        .build()
-            ).collect(Collectors.toList());
+            Page<News> newsPage = newsRepository.findByTickerOrderByDateDescTimeDesc(upperTicker, PageRequest.of(0, 10));
+            return newsPage.getContent().stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
-            log.error("💾 [NewsService] 종목 상세 뉴스 DB 검색 중 오류 발생: {}", e.getMessage(), e);
+            log.error("💥 [NewsService] 종목 상세 뉴스 조회 중 오류 발생 (ticker: {}): {}", upperTicker, e.getMessage(), e);
             return Collections.emptyList();
         }
+    }
+
+    private NewsDto convertToDto(News news) {
+        List<String> tickers = (news.getTicker() != null && !news.getTicker().isEmpty()) 
+                ? List.of(news.getTicker()) 
+                : Collections.emptyList();
+
+        return NewsDto.builder()
+                .id(news.getNewsId())
+                .newsOferEntpCode(news.getNewsOferEntpCode())
+                .date(news.getDate())
+                .time(news.getTime())
+                .title(news.getTitle())
+                .source(news.getSource())
+                .description(news.getDescription())
+                .tickers(tickers)
+                .build();
     }
 }

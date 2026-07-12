@@ -9,6 +9,8 @@
 
   --color-header: var(--header);
 
+  --color-tooltip-bg: var(--tooltip-bg);
+
    /* 사이드 바, 메뉴 바 등등*/
 
   --color-primary: var(--primary);
@@ -43,6 +45,8 @@
   /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
   --background: oklch(0.967 0.003 241.69);
   --foreground: oklch(0.147 0.004 49.25);
+
+  --tooltip-bg: #EEF4FF;
 
   --header:oklch(1 0 0);
 
@@ -81,6 +85,8 @@
   /* 배경색 변수 추가 (기존 코드에서 빠졌던 부분) */
   --color-background: oklch(0.967 0.003 241.69);
   --color-foreground: #131B2E;
+
+  --tooltip-bg: #EEF4FF;
 
   --header:#131B2E;
 

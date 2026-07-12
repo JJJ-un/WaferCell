@@ -75,7 +75,7 @@ export const BasicVoronoi = () => {
                   setHoveredPosition(null);
                   setHoveredTicker(null);
                 }}
-                onClick={() => navigate({ to: '/chart/$ticker', params: { ticker: stock.base.ticker } })}
+                onClick={() => navigate({ to: '/stock/$ticker', params: { ticker: stock.base.ticker } })}
                 style={{ transition: 'fill 0.3s ease', cursor: 'pointer' }} 
               />
               <text

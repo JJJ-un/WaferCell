@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 /**
  * 투자 일지 API 엔드포인트를 노출하는 REST 컨트롤러
@@ -30,10 +32,18 @@ public class InvestmentJournalController {
     }
 
     /**
-     * 모든 종목의 투자 일지 목록을 조회합니다. (My Diary 대시보드용)
+     * 모든 종목의 투자 일지 목록을 조회합니다. (My Diary 대시보드용, 페이징 지원)
      */
     @GetMapping
-    public ResponseEntity<List<JournalResponse>> getAllJournals() {
+    public ResponseEntity<List<JournalResponse>> getAllJournals(
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size
+    ) {
+        if (page != null && size != null) {
+            Pageable pageable = PageRequest.of(page, size);
+            List<JournalResponse> list = journalService.getAllJournalsPaged(pageable);
+            return ResponseEntity.ok(list);
+        }
         List<JournalResponse> list = journalService.getAllJournals();
         return ResponseEntity.ok(list);
     }

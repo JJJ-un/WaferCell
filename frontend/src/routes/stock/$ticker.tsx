@@ -1,6 +1,15 @@
 import { SimpleChart } from "@/widgets/SimpleChart"
-import Selector from "@/shared/ui/selector/Selector"
+import Selector, { type SelectorOption } from "@/shared/ui/selector/Selector"
 import { type ChartPeriod } from "@/shared/type/period.type"
+
+const periodOptions: SelectorOption<ChartPeriod>[] = [
+    { value: '1분', label: '1분' },
+    { value: '5분', label: '5분' },
+    { value: '일', label: '일' },
+    { value: '주', label: '주' },
+    { value: '월', label: '월' },
+    { value: '년', label: '년' }
+];
 import { useState, useEffect, useRef, useContext } from "react";
 import { DailyPriceList } from "@/widgets/DailyPriceList";
 import { useParams, createFileRoute } from "@tanstack/react-router";
@@ -14,7 +23,7 @@ import { useJournalQueries, type JournalResponseDto } from "@/features/stock-jou
 import { JournalDrawer } from "@/widgets/journal/JournalDrawer";
 
 export const Chart = () => {
-    const { ticker } = useParams({ from: '/chart/$ticker' }) as { ticker: string };
+    const { ticker } = useParams({ from: '/stock/$ticker' }) as { ticker: string };
     const [selectedPeriod, setSelectedPeriod] = useState<ChartPeriod>('일');
     const { events } = useContext(NewsEventContext);
 
@@ -90,30 +99,34 @@ export const Chart = () => {
 
     return (
         <div className="p-[24px] flex flex-col gap-[24px]">
-            {/* 좌측 영역 (데이터 흐름) */}
-            <div className="bg-primary border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-lg">
+            {/* 차트 섹션 (흰색 바탕 카드로 독립 분리) */}
+            <div className="bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md overflow-hidden">
                 <div className="flex justify-between items-center">
-                    <Selector selected={selectedPeriod} onSelect={setSelectedPeriod} />
+                    <Selector options={periodOptions} selected={selectedPeriod} onSelect={setSelectedPeriod} />
                     
-                    {/* 투자 일지 신규 작성 버튼 */}
+                    {/* 투자 일지 신규 작성 버튼 (디자인 시스템 파란색, 연필 아이콘 제거) */}
                     <button
                         onClick={handleNewJournalClick}
-                        className="bg-[#A2FF00] hover:bg-[#8BD800] text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-500/10 active:scale-95"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-95"
                     >
-                        <span>✏️</span> 일지 작성
+                        일지 작성
                     </button>
                 </div>
                 
                 {/* 차트에 일지 이벤트(B/S/M 마커)와 클릭 이벤트 바인딩 */}
-                <SimpleChart 
-                    chartData={chartResponse.chartData} 
-                    newsEvents={events} 
-                    journalEvents={tickerJournals}
-                    period={selectedPeriod} 
-                    onJournalClick={handleJournalClick}
-                />
+                <div className="w-full">
+                    <SimpleChart 
+                        chartData={chartResponse.chartData} 
+                        newsEvents={events} 
+                        journalEvents={tickerJournals}
+                        period={selectedPeriod} 
+                        onJournalClick={handleJournalClick}
+                    />
+                </div>
+            </div>
 
-                {/* 일별 시세 리스트 및 자체 뷰포트 무한 스크롤 감지 결합 */}
+            {/* 일별 시세 리스트 섹션 (독립 카드 분리) */}
+            <div className="bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md">
                 <div className="flex flex-col">
                     <DailyPriceList dailyPrices={flatDailyPrices}>
                         {/* 감지선 엘리먼트가 테이블 내부 스크롤 영역 최하단에 삽입됨 */}
@@ -136,6 +149,6 @@ export const Chart = () => {
     )
 }
 
-export const Route = createFileRoute('/chart/$ticker')({
+export const Route = createFileRoute('/stock/$ticker')({
     component: Chart,
 });

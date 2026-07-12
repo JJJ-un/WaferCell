@@ -18,18 +18,19 @@ export const SectorDropdown = () => {
         <Dropdown.Value value={selectedSector} />
         <Dropdown.Icon />
       </Dropdown.Trigger>
-      
+
       <Dropdown.Menu className="absolute top-full left-0 w-full mt-2 py-1 bg-primary border rounded-xl shadow-2xl z-50 overflow-hidden">
         {SECTORS.map((sector) => (
           <Dropdown.Option
             key={sector}
             optionId={sector}
             onSelect={(id) => setSelectedSector(id as SectorName)}
+            closeOnSelect={false}
             className={`
               px-4 py-2 text-sm cursor-pointer transition-colors
-              ${selectedSector === sector 
-                ? 'bg-blue-600/20 text-blue-400 font-bold' 
-                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'}
+              ${selectedSector === sector
+                ? 'bg-blue-600/20 text-blue-400 font-bold'
+                : 'text-slate-400'}
             `}
           >
             {sector}

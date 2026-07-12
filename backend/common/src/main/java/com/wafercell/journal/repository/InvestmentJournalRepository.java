@@ -4,6 +4,8 @@ import com.wafercell.journal.entity.InvestmentJournal;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 /**
@@ -17,4 +19,7 @@ public interface InvestmentJournalRepository extends JpaRepository<InvestmentJou
     
     // 전체 종목의 일지 목록을 날짜 역순으로 조회 (My Diary 페이지용)
     List<InvestmentJournal> findAllByOrderByJournalDateDesc();
+
+    // 전체 종목의 일지 목록을 페이징 및 날짜 역순으로 조회
+    Page<InvestmentJournal> findAllByOrderByJournalDateDesc(Pageable pageable);
 }

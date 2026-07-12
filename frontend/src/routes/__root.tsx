@@ -4,6 +4,12 @@ import { ValueChainList } from '../widgets/value-chain/ValueChainList'
 import { NewsFeed } from '../widgets/news-feed/NewsFeed'
 import { TickerNewsList } from '../widgets/news-feed/TickerNewsList'
 import { useState, useEffect, createContext } from 'react'
+import Selector, { type SelectorOption } from '@/shared/ui/selector/Selector'
+
+const tabOptions: SelectorOption<'STREAM' | 'NEWS'>[] = [
+  { value: 'NEWS', label: '종목 뉴스' },
+  { value: 'STREAM', label: '글로벌 속보' }
+];
 
 interface StreamEvent {
   type: 'CALENDAR' | 'REALTIME_IMPACT';
@@ -23,15 +29,15 @@ const RootComponent = () => {
   const { ticker } = useParams({ strict: false }) as { ticker?: string };
   const [events, setEvents] = useState<StreamEvent[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'STREAM' | 'NEWS'>('STREAM'); // 탭 선택 상태 추가
+  const [activeTab, setActiveTab] = useState<'STREAM' | 'NEWS'>('NEWS'); // 탭 선택 상태 추가
 
   // 현재 라우트 경로 감지 (다이어리 페이지 여부 식별용)
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDiaryPage = pathname.startsWith('/diary');
 
-  // 종목(ticker)이 변경되면 기본적으로 '글로벌 속보' 탭을 띄우도록 설정
+  // 종목(ticker)이 변경되면 기본적으로 '종목 뉴스' 탭을 띄우도록 설정
   useEffect(() => {
-    setActiveTab('STREAM');
+    setActiveTab('NEWS');
   }, [ticker]);
 
   // 백그라운드에서도 실시간 속보 수집 및 AI 분석 카드가 누적되도록 최상위에서 SSE 연결을 관리합니다.
@@ -100,32 +106,19 @@ const RootComponent = () => {
 
         {/* 우측 실시간 속보 타임라인 패널 - 다이어리 페이지(/diary)일 경우 숨김 처리 */}
         {!isDiaryPage && (
-          <div className="w-[340px] bg-primary flex flex-col h-[795px] p-6 mt-[24px] mr-[24px] rounded-lg border border-slate-200/40 shadow-md">
+          <div className="w-[340px] bg-primary flex flex-col p-6 mt-[24px] mr-[24px] mb-[24px] rounded-lg border border-slate-200/40 shadow-md">
             
             {ticker ? (
               <>
                 {/* 우측 패널용 탭 헤더 컴포넌트 */}
-                <div className="flex border-b border-slate-200/60 mb-5 text-xs font-bold">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('STREAM')}
-                    className={`flex-1 pb-2.5 border-b-2 transition cursor-pointer text-center
-                      ${activeTab === 'STREAM'
-                        ? 'border-blue-500 text-blue-600 font-extrabold'
-                        : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                  >
-                    글로벌 속보
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('NEWS')}
-                    className={`flex-1 pb-2.5 border-b-2 transition cursor-pointer text-center
-                      ${activeTab === 'NEWS'
-                        ? 'border-blue-500 text-blue-600 font-extrabold'
-                        : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                  >
-                    종목 뉴스
-                  </button>
+                <div className="mb-5">
+                  <Selector
+                    options={tabOptions}
+                    selected={activeTab}
+                    onSelect={setActiveTab}
+                    className="w-full"
+                    itemClassName="flex-1 text-center"
+                  />
                 </div>
 
                 {activeTab === 'STREAM' ? (
