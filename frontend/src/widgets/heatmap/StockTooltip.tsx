@@ -4,6 +4,8 @@ export interface StockProps {
     data: StockSnapshot;
     x?: number;
     y?: number;
+    parentHeight?: number;
+    parentWidth?: number;
 }
 
 const formatUnit = (num: number | null | undefined): string => {
@@ -31,7 +33,7 @@ const formatCurrency = (num: number | null | undefined): string => {
     return '$' + num.toLocaleString();
 };
 
-export const StockTooltip = ({ data, x, y }: StockProps) => {
+export const StockTooltip = ({ data, x, y, parentHeight, parentWidth }: StockProps) => {
     const { base, price } = data;
     // 상태에 따른 컬러 및 부호 변수 추출
     const isUp = price.changePercent > 0;
@@ -39,12 +41,33 @@ export const StockTooltip = ({ data, x, y }: StockProps) => {
     const statusColor = isUp ? 'text-trend-up-500' : isDown ? 'text-trend-down-500' : 'text-slate-400';
     const trendIcon = isUp ? '▲' : isDown ? '▼' : '';
 
+    // 툴팁 사이즈를 넉넉하게 산정 (가로 300px, 세로 약 360px)
+    const tooltipWidth = 300;
+    const tooltipHeight = 360;
+
+    let leftPos = x ? x + 15 : 0;
+    let topPos = y ? y + 15 : 0;
+
+    // 하단 경계 검사: 툴팁이 부모 영역 밑으로 삐져나가면 툴팁을 타일 위쪽으로 반전 배치
+    if (parentHeight && y && y + tooltipHeight + 20 > parentHeight) {
+        topPos = y - tooltipHeight - 15;
+    }
+
+    // 우측 경계 검사: 툴팁이 부모 영역 오른쪽으로 삐져나가면 툴팁을 타일 왼쪽으로 반전 배치
+    if (parentWidth && x && x + tooltipWidth + 20 > parentWidth) {
+        leftPos = x - tooltipWidth - 15;
+    }
+
+    // 뷰포트 위쪽이나 왼쪽 바깥으로 나가는 것을 예방하기 위한 방어 코딩
+    if (topPos < 10) topPos = 10;
+    if (leftPos < 10) leftPos = 10;
+
     return (
         <div
-            className="fixed z-[1000] bg-tooltip-bg border border-slate-200 rounded-2xl p-6 text-slate-800 shadow-2xl shadow-slate-300/40 w-[300px] pointer-events-none backdrop-blur-sm"
+            className="absolute z-[1000] bg-tooltip-bg border border-slate-200 rounded-2xl p-6 text-slate-800 shadow-2xl shadow-slate-300/40 w-[300px] pointer-events-none backdrop-blur-sm"
             style={{
-                left: x ? `${x + 15}px` : 'auto',
-                top: y ? `${y + 15}px` : 'auto'
+                left: `${leftPos}px`,
+                top: `${topPos}px`
             }}
         >
             {/* 헤더: 티커 & 섹터 */}

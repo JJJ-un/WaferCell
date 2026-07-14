@@ -12,7 +12,48 @@ interface ValueChainListProps {
     connected: boolean;
 }
 
+import { useEffect, useRef, useContext } from 'react';
+import { NewsEventContext } from '@/routes/__root';
+
 export const ValueChainList = ({ ticker, events, connected }: ValueChainListProps) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { activeDate } = useContext(NewsEventContext);
+
+    useEffect(() => {
+        if (!activeDate || !containerRef.current || !events || events.length === 0) return;
+
+        const targetNorm = activeDate.replace(/[^0-9]/g, '');
+        if (targetNorm.length !== 8) return;
+
+        const childNodes = containerRef.current.querySelectorAll('[data-news-date]');
+        let bestMatchNode: HTMLDivElement | null = null;
+        let bestDiff = Infinity;
+
+        childNodes.forEach((node) => {
+            const nodeDate = node.getAttribute('data-news-date');
+            if (!nodeDate) return;
+            const nodeNorm = nodeDate.replace(/[^0-9]/g, '');
+            if (nodeNorm.length < 8) return;
+
+            const dateVal = parseInt(nodeNorm.substring(0, 8), 10);
+            const targetVal = parseInt(targetNorm, 10);
+            const diff = Math.abs(dateVal - targetVal);
+
+            if (diff < bestDiff) {
+                bestDiff = diff;
+                bestMatchNode = node as HTMLDivElement;
+            }
+        });
+
+        if (bestMatchNode && bestDiff < 30) {
+            const container = containerRef.current;
+            const targetOffset = (bestMatchNode as HTMLDivElement).offsetTop;
+            container.scrollTo({
+                top: targetOffset - 16,
+                behavior: 'smooth'
+            });
+        }
+    }, [activeDate, events]);
     if (!connected && events.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-[320px] text-slate-400 gap-[16px] bg-slate-50/30 rounded-2xl border border-dashed border-slate-200/60 p-[24px] backdrop-blur-sm transition-all duration-300">
@@ -33,7 +74,7 @@ export const ValueChainList = ({ ticker, events, connected }: ValueChainListProp
     }
 
     return (
-        <div className="flex flex-col gap-4 py-2 w-full animate-fadeIn overflow-x-hidden scrollbar-hide">
+        <div ref={containerRef} className="relative flex flex-col gap-4 py-2 w-full animate-fadeIn overflow-x-hidden scrollbar-hide">
             {events.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-[180px] text-slate-400 bg-slate-50/20 rounded-xl border border-slate-100 p-6 text-center">
                     <span className="text-xs text-slate-500 font-medium">연관 속보가 존재하지 않습니다.</span>
@@ -47,6 +88,7 @@ export const ValueChainList = ({ ticker, events, connected }: ValueChainListProp
                         <div
                             key={idx}
                             id={`news-card-${event.date}`}
+                            data-news-date={event.date}
                             className="group relative overflow-hidden transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md rounded-2xl p-5 border bg-white/80 backdrop-blur-md border-slate-200/60 hover:border-slate-300 shadow-[0_2px_12px_rgba(0,0,0,0.01)]"
                         >
                             {/* 카드 관계 배지 영역 */}

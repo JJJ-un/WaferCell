@@ -94,6 +94,7 @@ export interface StockNews {
   title: string;
   source: string;
   tickers: string[];
+  link?: string;
 }
 
 export interface NewsDetailResponse {

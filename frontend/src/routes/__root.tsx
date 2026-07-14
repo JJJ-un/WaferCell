@@ -19,7 +19,17 @@ interface StreamEvent {
   briefing: string[];
 }
 
-export const NewsEventContext = createContext<{ events: StreamEvent[] }>({ events: [] });
+export const NewsEventContext = createContext<{
+  events: StreamEvent[];
+  activeDate?: string;
+  setActiveDate?: (date: string) => void;
+  isChartVisible: boolean;
+  setIsChartVisible: (visible: boolean) => void;
+}>({ 
+  events: [],
+  isChartVisible: true,
+  setIsChartVisible: () => {}
+});
 
 /**
  * 전역 레이아웃 컴포넌트
@@ -30,10 +40,33 @@ const RootComponent = () => {
   const [events, setEvents] = useState<StreamEvent[]>([]);
   const [connected, setConnected] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'STREAM' | 'NEWS'>('NEWS'); // 탭 선택 상태 추가
+  const [activeDate, setActiveDate] = useState<string | undefined>(undefined);
+  const [isChartVisible, setIsChartVisible] = useState(true);
 
   // 현재 라우트 경로 감지 (다이어리 페이지 여부 식별용)
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDiaryPage = pathname.startsWith('/diary');
+  const isStockPage = pathname.startsWith('/stock/');
+  const isDashboardPage = pathname === '/dashboard' || pathname === '/';
+  const isViewportLocked = isDashboardPage || isStockPage;
+
+  const [isStickyShifted, setIsStickyShifted] = useState(false);
+
+  useEffect(() => {
+    if (!isStockPage) {
+      setIsStickyShifted(false);
+      return;
+    }
+    const handleScroll = () => {
+      if (window.scrollY > 180) {
+        setIsStickyShifted(true);
+      } else {
+        setIsStickyShifted(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isStockPage]);
 
   // 종목(ticker)이 변경되면 기본적으로 '종목 뉴스' 탭을 띄우도록 설정
   useEffect(() => {
@@ -95,18 +128,43 @@ const RootComponent = () => {
   }, [ticker]);
 
   return (
-    <div className="flex flex-col bg-background text-ink-main min-h-screen">
+    <div className={`flex flex-col bg-background text-ink-main ${
+      isViewportLocked ? "h-screen overflow-hidden" : "min-h-screen"
+    }`}>
       <Header />
-      <div className="flex">
-        <div className="flex-1">
-          <NewsEventContext.Provider value={{ events }}>
+      <div className={`flex ${
+        isViewportLocked ? "flex-1 min-h-0 overflow-hidden" : ""
+      }`}>
+        <div className={
+          isViewportLocked ? "flex-1 h-full min-h-0 overflow-hidden" : "flex-1"
+        }>
+          <NewsEventContext.Provider value={{ events, activeDate, setActiveDate, isChartVisible, setIsChartVisible }}>
             <Outlet />
           </NewsEventContext.Provider>
         </div>
 
         {/* 우측 실시간 속보 타임라인 패널 - 다이어리 페이지(/diary)일 경우 숨김 처리 */}
         {!isDiaryPage && (
-          <div className="w-[340px] bg-primary flex flex-col p-6 mt-[24px] mr-[24px] mb-[24px] rounded-lg border border-slate-200/40 shadow-md">
+          <div 
+            style={
+              isViewportLocked 
+                ? { 
+                    height: isChartVisible ? 'calc(100vh - 113px)' : 'calc(100vh - 171px)' 
+                  } 
+                : {
+                    top: isStickyShifted ? '147px' : '89px',
+                    height: 'calc(100vh - 113px)',
+                    willChange: 'top',
+                  }
+            }
+            className={
+              isViewportLocked
+                ? `w-[340px] bg-primary flex flex-col p-6 mr-[24px] mb-[24px] rounded-lg border border-slate-200/40 shadow-md overflow-hidden transition-all duration-300 ease-in-out ${
+                    isChartVisible ? "mt-[24px]" : "mt-[82px]"
+                  }`
+                : "w-[340px] sticky transition-[top] duration-300 ease-out bg-primary flex flex-col p-6 mt-[24px] mr-[24px] mb-[24px] rounded-lg border border-slate-200/40 shadow-md overflow-hidden"
+            }
+          >
             
             {ticker ? (
               <>

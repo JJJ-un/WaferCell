@@ -92,6 +92,7 @@ public class NewsScheduler {
                         .date(formattedDate)
                         .time(formattedTime)
                         .ticker(ticker)
+                        .link(item.getLink())
                         .build();
 
                 newsRepository.save(news);

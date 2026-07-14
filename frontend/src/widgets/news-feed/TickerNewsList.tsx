@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { useTickerNews, type TickerNewsDto } from '@/features/stock-news/hooks/useTickerNews';
+import { NewsEventContext } from '@/routes/__root';
 
 interface TickerNewsListProps {
   ticker: string;
@@ -11,6 +12,45 @@ interface TickerNewsListProps {
 export const TickerNewsList = ({ ticker }: TickerNewsListProps) => {
   const { data: newsList, isLoading, isError, error } = useTickerNews(ticker);
   const [selectedNews, setSelectedNews] = useState<TickerNewsDto | null>(null);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { activeDate } = useContext(NewsEventContext);
+
+  useEffect(() => {
+    if (!activeDate || !containerRef.current || !newsList || newsList.length === 0) return;
+
+    const targetNorm = activeDate.replace(/[^0-9]/g, '');
+    if (targetNorm.length !== 8) return;
+
+    const childNodes = containerRef.current.querySelectorAll('[data-news-date]');
+    let bestMatchNode: HTMLDivElement | null = null;
+    let bestDiff = Infinity;
+
+    childNodes.forEach((node) => {
+      const nodeDate = node.getAttribute('data-news-date');
+      if (!nodeDate) return;
+      const nodeNorm = nodeDate.replace(/[^0-9]/g, '');
+      if (nodeNorm.length < 8) return;
+
+      const dateVal = parseInt(nodeNorm.substring(0, 8), 10);
+      const targetVal = parseInt(targetNorm, 10);
+      const diff = Math.abs(dateVal - targetVal);
+
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestMatchNode = node as HTMLDivElement;
+      }
+    });
+
+    if (bestMatchNode && bestDiff < 30) {
+      const container = containerRef.current;
+      const targetOffset = (bestMatchNode as HTMLDivElement).offsetTop;
+      container.scrollTo({
+        top: targetOffset - 16,
+        behavior: 'smooth'
+      });
+    }
+  }, [activeDate, newsList]);
 
   if (isLoading) {
     return (
@@ -42,11 +82,18 @@ export const TickerNewsList = ({ ticker }: TickerNewsListProps) => {
     <div className="flex flex-col w-full h-full text-slate-800 select-text">
       
       {/* 뉴스 목록 리스트 */}
-      <div className="flex-1 overflow-y-auto flex flex-col pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] divide-y divide-slate-100">
+      <div ref={containerRef} className="relative flex-1 overflow-y-auto flex flex-col pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] divide-y divide-slate-100">
         {newsList.map((news) => (
           <div
             key={news.id}
-            onClick={() => setSelectedNews(news)}
+            data-news-date={news.date}
+            onClick={() => {
+              if (news.link) {
+                window.open(news.link, '_blank', 'noopener,noreferrer');
+              } else {
+                setSelectedNews(news);
+              }
+            }}
             className="py-5 cursor-pointer group"
           >
             <div className="text-sm font-semibold text-foreground group-hover:text-trend-down-500 transition-colors duration-200 line-clamp-2 mb-3">

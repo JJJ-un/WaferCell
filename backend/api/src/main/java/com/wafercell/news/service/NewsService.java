@@ -79,6 +79,7 @@ public class NewsService {
                 .source(news.getSource())
                 .description(news.getDescription())
                 .tickers(tickers)
+                .link(news.getLink())
                 .build();
     }
 }

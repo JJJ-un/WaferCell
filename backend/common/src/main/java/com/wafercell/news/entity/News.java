@@ -43,8 +43,11 @@ public class News {
     @Column(nullable = true)
     private String ticker;              // 대상 종목 티커 (null이면 메인 시황)
 
+    @Column(nullable = true, length = 1000)
+    private String link;                // 기사 원본 URL 링크
+
     @Builder
-    public News(String newsId, String newsOferEntpCode, String date, String time, String title, String source, String description, String ticker) {
+    public News(String newsId, String newsOferEntpCode, String date, String time, String title, String source, String description, String ticker, String link) {
         this.newsId = newsId;
         this.newsOferEntpCode = (newsOferEntpCode != null) ? newsOferEntpCode : "GOOGLE_RSS";
         this.date = date;
@@ -53,5 +56,6 @@ public class News {
         this.source = source;
         this.description = description;
         this.ticker = ticker;
+        this.link = link;
     }
 }

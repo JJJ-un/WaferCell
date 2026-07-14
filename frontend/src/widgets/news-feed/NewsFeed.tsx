@@ -5,6 +5,7 @@ export const NewsFeed = () => {
   console.log("📡 [NewsFeed 컴포넌트 렌더링]");
   const [selectedNews, setSelectedNews] = useState<string | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     data,
@@ -18,13 +19,19 @@ export const NewsFeed = () => {
 
   // 스크롤 감지를 위한 Intersection Observer 설정
   useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 1.0 }
+      { 
+        root: container,
+        threshold: 0.1 
+      }
     );
 
     if (observerRef.current) {
@@ -34,8 +41,12 @@ export const NewsFeed = () => {
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  const handleNewsClick = (content: string) => {
-    setSelectedNews(content);
+  const handleNewsClick = (news: any) => {
+    if (news.link) {
+      window.open(news.link, '_blank', 'noopener,noreferrer');
+    } else {
+      setSelectedNews(news.title);
+    }
   };
 
   if (isLoading) return <div className="flex items-center justify-center w-full p-4 text-slate-400">뉴스를 불러오는 중...</div>;
@@ -59,12 +70,12 @@ export const NewsFeed = () => {
         <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
       </div>
 
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {data?.pages.map((page) =>
           page.map((news) => (
             <div
               key={news.id}
-              onClick={() => handleNewsClick(news.title)}
+              onClick={() => handleNewsClick(news)}
               className="py-5 cursor-pointer group"
             >
               <div className="text-sm font-semibold text-foreground group-hover:text-trend-down-500 transition-colors duration-200 line-clamp-2 mb-3">

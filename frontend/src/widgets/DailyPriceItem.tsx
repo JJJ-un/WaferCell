@@ -14,7 +14,7 @@ interface NewsEvent {
     newsUrl?: string;
 }
 
-export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
+export const DailyPriceItem = ({ dailyPrice, index }: { dailyPrice: DailyPrice; index: number }) => {
     const { changeAmount, changeRate, date, closePrice, volume } = dailyPrice;
     const { ticker } = useParams({ strict: false }) as { ticker?: string };
 
@@ -49,7 +49,13 @@ export const DailyPriceItem = ({ dailyPrice }: { dailyPrice: DailyPrice }) => {
 
     return (
         <>
-            <div className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 select-none">
+            <div 
+                style={{ 
+                    animationDelay: `${(index % 15) * 45}ms`,
+                    animationFillMode: 'both'
+                }}
+                className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 select-none animate-fade-slide-up"
+            >
                 <div className="w-24 text-gray-500">
                     {date}
                 </div>

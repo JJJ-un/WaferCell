@@ -10,6 +10,7 @@ export interface TickerNewsDto {
   source: string;
   description: string;
   tickers: string[];
+  link?: string;
 }
 
 /**
