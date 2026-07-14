@@ -187,7 +187,7 @@ export const Chart = () => {
             {/* 차트 섹션 (흰색 바탕 카드로 독립 분리) */}
             <div
                 className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md ${isChartVisible
-                        ? "h-[380px] opacity-100 mb-[24px] visible"
+                        ? "h-[420px] opacity-100 mb-[24px] visible"
                         : "h-0 opacity-0 mb-0 py-0 border-0 shadow-none pointer-events-none"
                     }`}
             >

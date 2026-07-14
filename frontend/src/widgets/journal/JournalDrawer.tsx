@@ -106,7 +106,10 @@ export const JournalDrawer = ({ isOpen, onClose, ticker, initialDate, existingJo
   };
 
   return (
-    <div className="fixed inset-0 z-[250] flex justify-end select-text text-slate-800">
+    <div 
+      onWheel={(e) => e.stopPropagation()}
+      className="fixed inset-0 z-[250] flex justify-end select-text text-slate-800"
+    >
       {/* 백드롭 (클릭 시 닫기) */}
       <div className="absolute inset-0 bg-black/25 backdrop-blur-xs" onClick={onClose} />
 

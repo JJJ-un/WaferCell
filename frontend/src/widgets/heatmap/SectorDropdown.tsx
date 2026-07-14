@@ -19,7 +19,10 @@ export const SectorDropdown = () => {
         <Dropdown.Icon />
       </Dropdown.Trigger>
 
-      <Dropdown.Menu className="absolute top-full left-0 w-full mt-2 py-1 bg-primary border rounded-xl shadow-2xl z-50 overflow-hidden">
+      <Dropdown.Menu 
+        onWheel={(e) => e.stopPropagation()}
+        className="absolute top-full left-0 w-full mt-2 py-1 bg-primary border rounded-xl shadow-2xl z-50 overflow-hidden"
+      >
         {SECTORS.map((sector) => (
           <Dropdown.Option
             key={sector}

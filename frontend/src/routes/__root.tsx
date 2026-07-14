@@ -48,7 +48,7 @@ const RootComponent = () => {
   const isDiaryPage = pathname.startsWith('/diary');
   const isStockPage = pathname.startsWith('/stock/');
   const isDashboardPage = pathname === '/dashboard' || pathname === '/';
-  const isViewportLocked = isDashboardPage || isStockPage;
+  const isViewportLocked = isDashboardPage || isStockPage || isDiaryPage;
 
   const [isStickyShifted, setIsStickyShifted] = useState(false);
 

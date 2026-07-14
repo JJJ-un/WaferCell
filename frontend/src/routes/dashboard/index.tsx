@@ -27,10 +27,10 @@ export const DashBoard = () => {
             className="h-full min-h-0 flex flex-col p-[24px] overflow-hidden"
         >
             <div 
-                className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${
+                className={`transition-all duration-300 ease-in-out flex-shrink-0 ${
                     isFilterVisible 
-                        ? "h-[38px] opacity-100 mb-[12px] visible" 
-                        : "h-0 opacity-0 mb-0 invisible pointer-events-none"
+                        ? "h-[38px] opacity-100 mb-[12px] visible overflow-visible" 
+                        : "h-0 opacity-0 mb-0 invisible overflow-hidden pointer-events-none"
                 }`}
             >
                 <SectorDropdown />

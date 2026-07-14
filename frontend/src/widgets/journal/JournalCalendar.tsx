@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { type JournalResponseDto } from '@/features/stock-journal/hooks/useJournalQueries';
 import CalmIcon from "@/shared/asset/icons/calm.svg?react";
@@ -31,6 +31,27 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
   
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-11
+
+  // 달력 그리드판 접힘 상태 및 하단 목록 스크롤 레퍼런스 정의
+  const [isCalGridVisible, setIsCalGridVisible] = useState(true);
+  const detailScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleCalWheel = (e: React.WheelEvent) => {
+    // 1. 우측 달력 영역 내의 모든 휠 동작은 좌측 사이드로 절대 버블링되지 않도록 완전 방어!
+    e.stopPropagation();
+
+    const detailScroll = detailScrollContainerRef.current;
+    
+    if (e.deltaY > 10 && isCalGridVisible) {
+      // 휠을 내리면 묻지도 따지지도 않고 달력판을 즉시 접어 상세 일지 영역을 넓혀줌!
+      setIsCalGridVisible(false);
+    } else if (e.deltaY < -10 && !isCalGridVisible) {
+      // 하단 일지 목록 스크롤바가 맨 위이거나, 일지가 없어 스크롤 컨테이너가 마운트되지 않았을 때 펼침!
+      if (!detailScroll || detailScroll.scrollTop <= 0) {
+        setIsCalGridVisible(true);
+      }
+    }
+  };
   
   const todayStr = useMemo(() => {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -130,9 +151,18 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
   const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
-    <div className="flex flex-col gap-6 w-full animate-fadeIn">
+    <div 
+      onWheel={handleCalWheel}
+      className="flex flex-col gap-6 w-full h-full min-h-0 overflow-hidden animate-fadeIn"
+    >
       {/* 캘린더 메인 컨테이너 */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+      <div 
+        className={`bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4 flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${
+          isCalGridVisible 
+            ? "h-[430px] opacity-100 mb-0" 
+            : "h-0 opacity-0 mb-0 py-0 border-0 shadow-none pointer-events-none"
+        }`}
+      >
         {/* 달력 헤더 네비게이션 */}
         <div className="flex justify-between items-center pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
@@ -165,7 +195,7 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
         </div>
 
         {/* 요일 헤더 그리드 */}
-        <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-400 py-1">
+        <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-slate-600 py-1">
           {weekdays.map((day, idx) => (
             <span
               key={day}
@@ -205,13 +235,13 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
                 key={cell.dateStr + '-' + index}
                 onClick={() => setSelectedDateStr(cell.dateStr)}
                 className={`
-                  relative min-h-[76px] p-2 border rounded-lg flex flex-col justify-between transition duration-200 cursor-pointer select-none
-                  ${cell.isCurrentMonth ? 'bg-white' : 'bg-slate-50/60 opacity-45'}
+                  relative min-h-[50px] p-2 border rounded-lg flex flex-col justify-between transition duration-200 cursor-pointer select-none
+                  ${cell.isCurrentMonth ? 'bg-white' : 'bg-slate-100/40 opacity-70'}
                   ${isSelected 
                     ? 'border-blue-500 ring-2 ring-blue-100/60 shadow-xs bg-blue-50/5' 
                     : isCellToday
                       ? 'border-slate-400 bg-slate-50/20'
-                      : 'border-slate-200/80 hover:border-slate-350 hover:bg-slate-50/30'
+                      : 'border-slate-200 hover:border-slate-350 hover:bg-slate-50/30'
                   }
                 `}
               >
@@ -220,10 +250,16 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
                   <span
                     className={`
                       text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full
-                      ${isCellToday ? 'bg-blue-600 text-white' : ''}
-                      ${!isCellToday && isSunday ? 'text-rose-500' : ''}
-                      ${!isCellToday && isSaturday ? 'text-blue-500' : ''}
-                      ${!isCellToday && !isSunday && !isSaturday ? 'text-slate-650' : ''}
+                      ${!cell.isCurrentMonth 
+                        ? 'text-slate-400 font-medium' 
+                        : isCellToday 
+                          ? 'bg-blue-600 text-white' 
+                          : isSunday 
+                            ? 'text-rose-500' 
+                            : isSaturday 
+                              ? 'text-blue-500' 
+                              : 'text-slate-800 font-bold'
+                      }
                     `}
                   >
                     {cell.dayNum}
@@ -283,13 +319,16 @@ export const JournalCalendar: React.FC<JournalCalendarProps> = ({ allJournals, o
       </div>
 
       {/* 캘린더 상세 리스트 영역 */}
-      <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+      <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
         <h4 className="text-sm font-semibold text-slate-700">
           {selectedDateStr}의 투자 일지
         </h4>
 
         {selectedJournals.length > 0 ? (
-          <div className="flex flex-col gap-4 max-h-[350px] overflow-y-auto pr-1">
+          <div 
+            ref={detailScrollContainerRef}
+            className="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-1"
+          >
             {selectedJournals.map((journal) => {
               const meta = FEELING_META[journal.feeling] || FEELING_META.NEUTRAL;
               let actionLabel = '메모';

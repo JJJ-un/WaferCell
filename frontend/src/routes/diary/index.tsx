@@ -36,6 +36,29 @@ export const DiaryPage = () => {
   const [animate, setAnimate] = useState(false);
   const { deleteJournal } = useJournalMutations();
 
+  // 휠 스크롤 감지 및 차트 노출 여부 상태 정의
+  const [isChartVisible, setIsChartVisible] = useState(true);
+  const handleWheel = (e: React.WheelEvent) => {
+    const scrollContainer = scrollContainerRef.current;
+    if (e.deltaY > 10 && isChartVisible) {
+      setIsChartVisible(false);
+    } else if (e.deltaY < -10 && !isChartVisible) {
+      if (viewMode === 'calendar') {
+        // 달력 모드일 때는 스크롤 컨테이너가 없으므로 휠을 올리면 즉시 도넛 차트 펼침
+        setIsChartVisible(true);
+      } else if (scrollContainer && scrollContainer.scrollTop <= 0) {
+        // 타임라인 모드일 때는 목록 스크롤바가 맨 위일 때만 펼침
+        setIsChartVisible(true);
+      }
+    }
+  };
+
+  // 우측 타임라인 전용 휠 제어 (이벤트 버블링 차단 가드)
+  const handleTimelineWheel = (e: React.WheelEvent) => {
+    // 우측 타임라인 영역 내에서의 모든 휠 동작은 좌측 영역으로 절대 전파되지 않도록 원천 격리 차단!
+    e.stopPropagation();
+  };
+
   // 필터링 관련 상태
   const [filterTicker, setFilterTicker] = useState<string>('ALL');
   const [filterAction, setFilterAction] = useState<string>('ALL');
@@ -127,11 +150,16 @@ export const DiaryPage = () => {
   const currentCalmPct = animate ? calmPct : 0;
   const currentNeutralPct = animate ? neutralPct : 0;
 
+  // 가장 우세한 감정 추출 (피드백 카드 배경 테마 연동용)
+  const maxFeeling = total > 0
+    ? (Object.entries(counts).reduce((a, b) => (a[1] > b[1] ? a : b))[0] as keyof typeof FEELING_META)
+    : 'NEUTRAL';
+  const maxFeelingMeta = FEELING_META[maxFeeling] || FEELING_META.NEUTRAL;
+
   // 감정 점수에 따른 AI 애널리스트 투자 코멘트 생성
   const getAiMessage = () => {
     if (total === 0) return '일지를 작성하면 오늘의 투자 심리를 AI 애널리스트가 실시간 진단해 드립니다.';
 
-    const maxFeeling = Object.entries(counts).reduce((a, b) => (a[1] > b[1] ? a : b))[0];
     switch (maxFeeling) {
       case 'GREEDY':
         return '현재 투자 성향에 탐욕(Greedy) 경향이 강하게 지배하고 있습니다. 최근 급등한 팹리스/파운드리 종목의 추격 매수로 인한 오버 슈팅 리스크가 없는지 분석 리포트를 재점검하고 현금 비중을 유지하는 편이 이롭습니다.';
@@ -156,12 +184,21 @@ export const DiaryPage = () => {
   };
 
   return (
-    <div className="p-6 flex flex-col gap-6 min-h-screen text-slate-800 bg-[#FAFBFD] select-text">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <div
+      onWheel={handleWheel}
+      className="h-full min-h-0 flex flex-col gap-6 p-6 overflow-hidden bg-[#FAFBFD] select-text"
+    >
+      <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-hidden">
 
         {/* 좌측 영역: 통계 및 AI Insights */}
-        <div className="flex-1 lg:max-w-[400px] flex flex-col gap-6">
-          <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col items-center gap-5">
+        <div className={`w-full lg:w-[400px] flex flex-col flex-shrink-0 min-h-0 h-full transition-all duration-300 ease-in-out ${isChartVisible ? "gap-6" : "gap-0"
+          }`}>
+          <div
+            className={`bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col items-center gap-5 flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${isChartVisible
+              ? "h-[350px] opacity-100 mb-0"
+              : "h-0 opacity-0 mb-0 py-0 border-0 shadow-none pointer-events-none"
+              }`}
+          >
             <h3 className="text-sm font-semibold text-slate-700 self-start">이달의 투자 감정 분석</h3>
 
             {total > 0 ? (
@@ -232,38 +269,38 @@ export const DiaryPage = () => {
           </div>
 
           {/* AI 감정 Insights */}
-          <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-3 flex-1">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-3 flex-1 min-h-0 overflow-hidden">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 flex-shrink-0">
               <h4>AI 심리 분석 및 피드백</h4>
             </div>
-            <p className="text-sm text-slate-650 leading-relaxed bg-slate-50 border border-slate-200/60 p-4 rounded-lg flex-1 flex items-center justify-center text-center">
-              {getAiMessage()}
-            </p>
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+              <p className={`text-sm leading-relaxed p-4 rounded-lg min-h-full flex items-center justify-center text-center border ${maxFeelingMeta.bg} ${maxFeelingMeta.color}`}>
+                {getAiMessage()}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* 우측 영역: 무한스크롤 타임라인 목록 피드 또는 달력 뷰 */}
-        <div className="flex-1 bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4">
+        <div className="flex-1 bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col gap-4 overflow-hidden h-full min-h-0">
           <div className="flex justify-between items-center pb-2 border-b border-slate-100">
             <h3 className="text-sm font-semibold text-slate-700">투자 일지</h3>
             <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
               <button
                 onClick={() => setViewMode('timeline')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition duration-150 cursor-pointer ${
-                  viewMode === 'timeline'
-                    ? 'bg-white text-blue-600 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition duration-150 cursor-pointer ${viewMode === 'timeline'
+                  ? 'bg-white text-blue-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+                  }`}
               >
                 타임라인
               </button>
               <button
                 onClick={() => setViewMode('calendar')}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition duration-150 cursor-pointer ${
-                  viewMode === 'calendar'
-                    ? 'bg-white text-blue-600 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition duration-150 cursor-pointer ${viewMode === 'calendar'
+                  ? 'bg-white text-blue-600 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+                  }`}
               >
                 달력
               </button>
@@ -274,11 +311,14 @@ export const DiaryPage = () => {
           <div className="flex flex-wrap gap-2 items-center pb-3 border-b border-slate-100/70 select-none">
             {/* Ticker Search Combobox */}
             <Dropdown className="relative">
-              <Dropdown.Trigger className="flex items-center justify-between gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-lg bg-white text-xs font-semibold text-slate-655 hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[120px]">
+              <Dropdown.Trigger className={`flex items-center justify-between gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[120px] ${filterTicker !== 'ALL'
+                ? 'border-blue-500 text-blue-600 bg-blue-50/30'
+                : 'border-slate-200/90 bg-white text-slate-800'
+                }`}>
                 <span className="truncate">{filterTicker === 'ALL' ? '종목: 전체' : filterTicker}</span>
                 <span className="text-[9px] text-slate-400 font-normal">▼</span>
               </Dropdown.Trigger>
-              
+
               <Dropdown.Menu className="absolute top-full left-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-2 flex flex-col gap-1.5 animate-fadeIn">
                 <input
                   type="text"
@@ -296,9 +336,8 @@ export const DiaryPage = () => {
                       setFilterTicker('ALL');
                       setTickerSearchQuery('');
                     }}
-                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                      filterTicker === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                    }`}
+                    className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterTicker === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                      }`}
                   >
                     전체 종목
                   </Dropdown.Option>
@@ -312,9 +351,8 @@ export const DiaryPage = () => {
                           setFilterTicker(ticker);
                           setTickerSearchQuery('');
                         }}
-                        className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                          filterTicker === ticker ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                        }`}
+                        className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterTicker === ticker ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                          }`}
                       >
                         {ticker}
                       </Dropdown.Option>
@@ -325,11 +363,14 @@ export const DiaryPage = () => {
 
             {/* Action Type Filter */}
             <Dropdown className="relative">
-              <Dropdown.Trigger className="flex items-center justify-between gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-lg bg-white text-xs font-semibold text-slate-655 hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[110px]">
+              <Dropdown.Trigger className={`flex items-center justify-between gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[110px] ${filterAction !== 'ALL'
+                ? 'border-blue-500 text-blue-600 bg-blue-50/30'
+                : 'border-slate-200/90 bg-white text-slate-800'
+                }`}>
                 <span>
                   {filterAction === 'ALL' ? '유형: 전체' :
-                   filterAction === 'BUY' ? '매수' :
-                   filterAction === 'SELL' ? '매도' : '메모'}
+                    filterAction === 'BUY' ? '매수' :
+                      filterAction === 'SELL' ? '매도' : '메모'}
                 </span>
                 <span className="text-[9px] text-slate-400 font-normal">▼</span>
               </Dropdown.Trigger>
@@ -337,36 +378,32 @@ export const DiaryPage = () => {
                 <Dropdown.Option
                   optionId="ALL"
                   onSelect={() => setFilterAction('ALL')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterAction === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterAction === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   유형: 전체
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="BUY"
                   onSelect={() => setFilterAction('BUY')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterAction === 'BUY' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterAction === 'BUY' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   매수
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="SELL"
                   onSelect={() => setFilterAction('SELL')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterAction === 'SELL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterAction === 'SELL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   매도
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="MEMO"
                   onSelect={() => setFilterAction('MEMO')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterAction === 'MEMO' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterAction === 'MEMO' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   메모
                 </Dropdown.Option>
@@ -375,12 +412,15 @@ export const DiaryPage = () => {
 
             {/* Feeling Filter */}
             <Dropdown className="relative">
-              <Dropdown.Trigger className="flex items-center justify-between gap-1.5 px-3 py-1.5 border border-slate-200/90 rounded-lg bg-white text-xs font-semibold text-slate-655 hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[110px]">
+              <Dropdown.Trigger className={`flex items-center justify-between gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold hover:border-slate-350 hover:bg-slate-50/50 transition duration-150 cursor-pointer min-w-[110px] ${filterFeeling !== 'ALL'
+                ? 'border-blue-500 text-blue-600 bg-blue-50/30'
+                : 'border-slate-200/90 bg-white text-slate-800'
+                }`}>
                 <span>
                   {filterFeeling === 'ALL' ? '감정: 전체' :
-                   filterFeeling === 'CALM' ? '차분함' :
-                   filterFeeling === 'GREEDY' ? '탐욕' :
-                   filterFeeling === 'FEAR' ? '공포' : '평온'}
+                    filterFeeling === 'CALM' ? '차분함' :
+                      filterFeeling === 'GREEDY' ? '탐욕' :
+                        filterFeeling === 'FEAR' ? '공포' : '평온'}
                 </span>
                 <span className="text-[9px] text-slate-400 font-normal">▼</span>
               </Dropdown.Trigger>
@@ -388,45 +428,40 @@ export const DiaryPage = () => {
                 <Dropdown.Option
                   optionId="ALL"
                   onSelect={() => setFilterFeeling('ALL')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterFeeling === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterFeeling === 'ALL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   감정: 전체
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="CALM"
                   onSelect={() => setFilterFeeling('CALM')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterFeeling === 'CALM' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterFeeling === 'CALM' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   차분함
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="GREEDY"
                   onSelect={() => setFilterFeeling('GREEDY')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterFeeling === 'GREEDY' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterFeeling === 'GREEDY' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   탐욕
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="FEAR"
                   onSelect={() => setFilterFeeling('FEAR')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterFeeling === 'FEAR' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterFeeling === 'FEAR' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   공포
                 </Dropdown.Option>
                 <Dropdown.Option
                   optionId="NEUTRAL"
                   onSelect={() => setFilterFeeling('NEUTRAL')}
-                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${
-                    filterFeeling === 'NEUTRAL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-655'
-                  }`}
+                  className={`w-full text-left px-2 py-1.5 rounded-md text-xs font-medium transition duration-150 cursor-pointer ${filterFeeling === 'NEUTRAL' ? 'bg-blue-50 text-blue-600 font-semibold' : 'hover:bg-slate-50 text-slate-800'
+                    }`}
                 >
                   평온
                 </Dropdown.Option>
@@ -454,7 +489,8 @@ export const DiaryPage = () => {
             ) : (isFiltered ? filteredJournals : infiniteJournals).length > 0 ? (
               <div
                 ref={scrollContainerRef}
-                className="max-h-[660px] overflow-y-auto pl-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                onWheel={handleTimelineWheel}
+                className="flex-1 min-h-0 overflow-y-auto pl-2 pr-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
               >
                 <div className="relative pl-6 border-l-2 border-slate-200/85 flex flex-col gap-6 py-2">
                   {(isFiltered ? filteredJournals : infiniteJournals).map((journal: JournalResponseDto) => {
@@ -472,7 +508,8 @@ export const DiaryPage = () => {
                       >
                         {/* 타임라인 축 포인트 데코레이션 */}
                         <span
-                          className="absolute -left-[32px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white bg-blue-500 inline-block shadow-sm"
+                          className="absolute -left-[32px] top-5 w-3.5 h-3.5 rounded-full border-2 border-white inline-block shadow-sm"
+                          style={{ backgroundColor: meta.barColor }}
                         ></span>
 
                         <div className="flex justify-between items-start gap-4 mb-4">
@@ -484,7 +521,7 @@ export const DiaryPage = () => {
                             <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{journal.ticker}</span>
 
                             <span className={`text-xs px-2 py-0.5 rounded border 
-                            ${journal.actionType === 'BUY' ? 'bg-rose-50 border-rose-200 text-rose-600' :
+                            ${journal.actionType === 'BUY' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
                                 journal.actionType === 'SELL' ? 'bg-blue-50 border-blue-200 text-blue-600' :
                                   'bg-slate-50 border-slate-200 text-slate-500'}`}>
                               {actionLabel}
@@ -549,7 +586,9 @@ export const DiaryPage = () => {
             isAllLoading ? (
               <div className="text-center py-20 text-sm text-slate-500">달력 데이터를 불러오는 중...</div>
             ) : (
-              <JournalCalendar allJournals={filteredJournals} onDelete={handleDelete} />
+              <div className="flex-1 min-h-0 flex flex-col">
+                <JournalCalendar allJournals={filteredJournals} onDelete={handleDelete} />
+              </div>
             )
           )}
         </div>
