@@ -36,6 +36,7 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
   // newsEvents 및 journalEvents 변경 시 차트 재생성을 막기 위해 useRef로 최신 값 참조
   const newsEventsRef = useRef<StreamEvent[]>(newsEvents);
   const journalEventsRef = useRef<JournalResponseDto[]>(journalEvents);
+  const onJournalClickRef = useRef<((date: string) => void) | undefined>(onJournalClick);
 
   useEffect(() => {
     newsEventsRef.current = newsEvents;
@@ -44,6 +45,10 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
   useEffect(() => {
     journalEventsRef.current = journalEvents;
   }, [journalEvents]);
+
+  useEffect(() => {
+    onJournalClickRef.current = onJournalClick;
+  }, [onJournalClick]);
 
   // 1. 차트 인스턴스 초기 생성 및 소멸 (period 변경 시 또는 마운트 시 실행)
   useEffect(() => {
@@ -156,11 +161,11 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
 
       // 1. 투자 일지 클릭 이벤트가 있을 시 우선적으로 핸들러 트리거
       const matchedJournal = journalEventsRef.current.find(j => j.journalDate === clickedTime);
-      if (matchedJournal && onJournalClick) {
-        onJournalClick(clickedTime);
+      if (matchedJournal && onJournalClickRef.current) {
+        onJournalClickRef.current(clickedTime);
         return;
       }
-
+ 
       // 2. 일지가 없으면 기존 실시간 뉴스 카드로 스크롤 연동
       const matchedEvent = newsEventsRef.current.find(e => e.date === clickedTime);
       if (matchedEvent) {
@@ -174,22 +179,76 @@ export const SimpleChart = ({ chartData, newsEvents = [], journalEvents = [], pe
         }
       }
     });
-
+ 
     const resizeObserver = new ResizeObserver((entries) => {
       if (entries.length === 0 || !entries[0].contentRect) return;
       const { width } = entries[0].contentRect;
+      // 너비가 0 이하(차트가 접혔을 때)일 때는 리사이징을 스킵하여 캔버스 드로잉 버퍼를 안전하게 보존합니다.
+      if (width <= 0) return;
       chart.resize(width, 300);
     });
     resizeObserver.observe(container);
-
+ 
     return () => {
       resizeObserver.disconnect();
       chart.remove();
       chartApiRef.current = null;
       seriesRef.current = null;
     };
+ 
+  }, []);
 
-  }, [period, onJournalClick]);
+  // 1.1. period 변경 시 차트를 파괴하지 않고 X축 및 툴팁 포맷 옵션만 동적으로 업데이트
+  useEffect(() => {
+    const chart = chartApiRef.current;
+    if (!chart) return;
+
+    chart.applyOptions({
+      timeScale: {
+        tickMarkFormatter: (time, _tickMarkType, _locale) => {
+          if (typeof time === 'number') {
+            const date = new Date(time * 1000);
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+
+            if (period === '일' || period === '주') {
+              return `${month}/${day}`; // MM/DD
+            } else if (period === '월') {
+              return `${String(year).substring(2)}/${month}`; // YY/MM
+            } else if (period === '년') {
+              return `${year}`; // YYYY
+            } else {
+              // 분봉 등
+              const hours = String(date.getUTCHours()).padStart(2, '0');
+              const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+              return `${hours}:${minutes}`;
+            }
+          }
+          return '';
+        }
+      },
+      localization: {
+        timeFormatter: (time) => {
+          if (typeof time === 'number') {
+            const date = new Date(time * 1000);
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+
+            if (period === '일' || period === '주' || period === '월' || period === '년') {
+              return `${year}-${month}-${day}`;
+            } else {
+              const hours = String(date.getUTCHours()).padStart(2, '0');
+              const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+              return `${year}-${month}-${day} ${hours}:${minutes}`;
+            }
+          }
+          return String(time);
+        }
+      }
+    });
+  }, [period]);
 
   // 2. 차트 가격 데이터 주입 (chartData 변경 시 실행)
   useEffect(() => {

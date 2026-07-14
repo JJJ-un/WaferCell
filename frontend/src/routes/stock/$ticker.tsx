@@ -10,7 +10,7 @@ const periodOptions: SelectorOption<ChartPeriod>[] = [
     { value: '월', label: '월' },
     { value: '년', label: '년' }
 ];
-import { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext, useCallback } from "react";
 import { DailyPriceList } from "@/widgets/DailyPriceList";
 import { useParams, createFileRoute } from "@tanstack/react-router";
 import { NewsEventContext } from "../__root";
@@ -100,15 +100,15 @@ export const Chart = () => {
     }, [hasNextPage, isFetchingNextPage, fetchNextPage, priceResponse]);
 
     // 드로워가 닫힐 때 최신 일지 목록을 리프레시
-    const handleDrawerClose = () => {
+    const handleDrawerClose = useCallback(() => {
         setIsDrawerOpen(false);
         setSelectedJournal(undefined);
         setSelectedJournalDate(undefined);
         refetchTicker();
-    };
+    }, [refetchTicker]);
 
     // 차트의 일지 마커 클릭 시의 핸들러
-    const handleJournalClick = (date: string) => {
+    const handleJournalClick = useCallback((date: string) => {
         const matched = tickerJournals.find(j => j.journalDate === date);
         if (matched) {
             setSelectedJournal(matched);
@@ -118,16 +118,19 @@ export const Chart = () => {
             setSelectedJournalDate(date);
         }
         setIsDrawerOpen(true);
-    };
+    }, [tickerJournals]);
 
     // 신규 작성 버튼 핸들러
-    const handleNewJournalClick = () => {
+    const handleNewJournalClick = useCallback(() => {
         setSelectedJournal(undefined);
         setSelectedJournalDate(undefined);
         setIsDrawerOpen(true);
-    };
+    }, []);
 
-    if (isChartLoading || isPriceLoading) return <div className="p-24">데이터를 불러오는 중...</div>;
+    // 최초 진입 시 데이터가 아예 없을 때만 전체 로딩 화면 노출
+    const isInitialLoading = (isChartLoading && !chartResponse) || (isPriceLoading && !priceResponse);
+    if (isInitialLoading) return <div className="p-24">데이터를 불러오는 중...</div>;
+    
     if (!chartResponse || !priceResponse) return <div className="p-24">데이터가 없습니다.</div>;
 
     const flatDailyPrices = priceResponse?.pages?.flat() || [];
