@@ -12,12 +12,12 @@ interface ValueChainListProps {
     connected: boolean;
 }
 
-import { useEffect, useRef, useContext } from 'react';
-import { NewsEventContext } from '@/routes/__root';
+import { useEffect, useRef } from 'react';
+import { useNewsEvent } from '@/features/stock-news/provider/NewsEventProvider';
 
 export const ValueChainList = ({ ticker, events, connected }: ValueChainListProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const { activeDate } = useContext(NewsEventContext);
+    const { activeDate } = useNewsEvent();
 
     useEffect(() => {
         if (!activeDate || !containerRef.current || !events || events.length === 0) return;

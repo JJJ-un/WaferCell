@@ -6,8 +6,12 @@ import { useTreemap } from '@/features/stock-heatmap/hooks/useTreemap';
 import { useStockStore } from '@/features/stock-heatmap/model/useStockStore';
 import { useHeatmapQuery } from '@/entities/stock/model/useHeatmap';
 import { useNavigate } from '@tanstack/react-router';
+import { useRealtimeStocks } from '@/features/realtime-stock/hooks/useRealtimeStocks';
 
-export const StandardHeatmap = () => {
+export const StockHeatmap = () => {
+  // 실시간 웹소켓 구독 및 쿼리 캐시 자동 갱신
+  useRealtimeStocks();
+
   const selectedSector = useStockStore(state => state.selectedSectorId);
   const hoveredTicker = useStockStore(state => state.hoveredTickerId);
   const { setHoveredTicker } = useStockStore(state => state.actions);

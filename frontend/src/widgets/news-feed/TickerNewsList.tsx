@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTickerNews, type TickerNewsDto } from '@/features/stock-news/hooks/useTickerNews';
-import { NewsEventContext } from '@/routes/__root';
+import { useNewsEvent } from '@/features/stock-news/provider/NewsEventProvider';
 
 interface TickerNewsListProps {
   ticker: string;
@@ -14,7 +14,7 @@ export const TickerNewsList = ({ ticker }: TickerNewsListProps) => {
   const [selectedNews, setSelectedNews] = useState<TickerNewsDto | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const { activeDate } = useContext(NewsEventContext);
+  const { activeDate } = useNewsEvent();
 
   useEffect(() => {
     if (!activeDate || !containerRef.current || !newsList || newsList.length === 0) return;

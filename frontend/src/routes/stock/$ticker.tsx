@@ -10,10 +10,11 @@ const periodOptions: SelectorOption<ChartPeriod>[] = [
     { value: '월', label: '월' },
     { value: '년', label: '년' }
 ];
-import { useState, useEffect, useRef, useContext, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DailyPriceList } from "@/widgets/DailyPriceList";
 import { useParams, createFileRoute } from "@tanstack/react-router";
-import { NewsEventContext } from "../__root";
+import { NewsEventProvider, useNewsEvent } from "@/features/stock-news/provider/NewsEventProvider";
+import { RightNewsPanel } from "@/widgets/news-feed/RightNewsPanel";
 import { useChartData } from "@/features/stock-chart/hook/useChartData";
 import { useRealtimeChart } from "@/features/stock-chart/hook/useRealtimeChart";
 import { useInfiniteDailyPrices } from "@/features/daily-prices/hooks/useInfiniteDailyPrices";
@@ -43,10 +44,10 @@ const tickerNames: Record<string, string> = {
     ADI: "아날로그 디바이스"
 };
 
-export const Chart = () => {
+const StockDetailPageContent = () => {
     const { ticker } = useParams({ from: '/stock/$ticker' }) as { ticker: string };
     const [selectedPeriod, setSelectedPeriod] = useState<ChartPeriod>('일');
-    const { events, setActiveDate, isChartVisible, setIsChartVisible } = useContext(NewsEventContext);
+    const { events, setActiveDate, isChartVisible, setIsChartVisible } = useNewsEvent();
 
     // 1. 투자 일지 쿼리 및 드로워 상태 선언
     const { tickerJournals, refetchTicker } = useJournalQueries(ticker);
@@ -144,115 +145,126 @@ export const Chart = () => {
     const showMiniHeader = !isChartVisible;
 
     return (
-        <div
-            onWheel={handleWheel}
-            className={`h-full min-h-0 flex flex-col px-[24px] pb-[24px] overflow-hidden transition-all duration-300 ease-in-out ${
-                isChartVisible ? "pt-[24px]" : "pt-[82px]"
-            }`}
-        >
-            {/* 상단 미니 요약 스티키 헤더 (차트가 접혔을 때 Header 바로 아래 고정) */}
+        <div className="flex flex-1 h-full min-h-0 overflow-hidden">
             <div
-                className={`fixed top-[65px] left-0 right-0 h-[58px] bg-white/85 backdrop-blur-md border-b border-slate-200/50 shadow-sm z-[190] px-[40px] flex items-center justify-between transition-all duration-300 ease-out transform ${showMiniHeader ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
-                    }`}
+                onWheel={handleWheel}
+                className={`flex-1 h-full min-h-0 flex flex-col px-[24px] pb-[24px] overflow-hidden transition-all duration-300 ease-in-out ${
+                    isChartVisible ? "pt-[24px]" : "pt-[82px]"
+                }`}
             >
-                {/* 좌측: 종목명 및 티커 */}
-                <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-800 text-sm tracking-wide bg-slate-100 px-2.5 py-0.5 rounded text-slate-600 uppercase">
-                        {ticker}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-400">주가 요약</span>
-                </div>
-
-                {/* 중앙: 실시간 주가 정보 */}
-                {latestPriceInfo && (
-                    <div className="flex items-center gap-4 animate-fadeIn">
-                        <span className="font-bold text-slate-900 text-base">
-                            {latestPriceInfo.closePrice.toLocaleString()} <span className="text-[11px] font-medium text-slate-400">USD</span>
-                        </span>
-                        <span className={`text-xs font-bold ${miniColorClass} flex items-center gap-0.5`}>
-                            {isMiniPositive ? '▲' : isMiniNegative ? '▼' : ''} {miniSign}{latestPriceInfo.changeAmount.toLocaleString()} ({miniSign}{latestPriceInfo.changeRate}%)
-                        </span>
-                    </div>
-                )}
-
-                {/* 우측: 숏컷 일지 작성 버튼 */}
-                <button
-                    onClick={handleNewJournalClick}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition duration-150 cursor-pointer active:scale-95 shadow-md shadow-blue-500/10"
+                {/* 상단 미니 요약 스티키 헤더 (차트가 접혔을 때 Header 바로 아래 고정) */}
+                <div
+                    className={`fixed top-[65px] left-0 right-0 h-[58px] bg-white/85 backdrop-blur-md border-b border-slate-200/50 shadow-sm z-[190] px-[40px] flex items-center justify-between transition-all duration-300 ease-out transform ${showMiniHeader ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+                        }`}
                 >
-                    일지 작성
-                </button>
-            </div>
+                    {/* 좌측: 종목명 및 티커 */}
+                    <div className="flex items-center gap-3">
+                        <span className="font-bold text-slate-800 text-sm tracking-wide bg-slate-100 px-2.5 py-0.5 rounded text-slate-600 uppercase">
+                            {ticker}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-400">주가 요약</span>
+                    </div>
 
-            {/* 차트 섹션 (흰색 바탕 카드로 독립 분리) */}
-            <div
-                className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md ${isChartVisible
-                        ? "h-[420px] opacity-100 mb-[24px] visible"
-                        : "h-0 opacity-0 mb-0 py-0 border-0 shadow-none pointer-events-none"
-                    }`}
-            >
-                {/* 상단 툴바 컨트롤러 영역 - 항상 노출 */}
-                <div className="flex justify-between items-center flex-shrink-0">
-                    {/* 좌측: 종목명 및 티커 + Selector */}
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-baseline gap-1.5">
-                            <span className="font-extrabold text-slate-800 text-xl tracking-tight uppercase">
-                                {ticker}
+                    {/* 중앙: 실시간 주가 정보 */}
+                    {latestPriceInfo && (
+                        <div className="flex items-center gap-4 animate-fadeIn">
+                            <span className="font-bold text-slate-900 text-base">
+                                {latestPriceInfo.closePrice.toLocaleString()} <span className="text-[11px] font-medium text-slate-400">USD</span>
                             </span>
-                            <span className="text-xs font-semibold text-slate-500/80">
-                                {tickerNames[ticker.toUpperCase()] || ""}
+                            <span className={`text-xs font-bold ${miniColorClass} flex items-center gap-0.5`}>
+                                {isMiniPositive ? '▲' : isMiniNegative ? '▼' : ''} {miniSign}{latestPriceInfo.changeAmount.toLocaleString()} ({miniSign}{latestPriceInfo.changeRate}%)
                             </span>
                         </div>
-                        <div className="h-4 w-[1px] bg-slate-200/80" />
-                        <Selector options={periodOptions} selected={selectedPeriod} onSelect={setSelectedPeriod} />
-                    </div>
+                    )}
 
-                    {/* 투자 일지 신규 작성 버튼 (디자인 시스템 파란색, 연필 아이콘 제거) */}
+                    {/* 우측: 숏컷 일지 작성 버튼 */}
                     <button
                         onClick={handleNewJournalClick}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-95"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition duration-150 cursor-pointer active:scale-95 shadow-md shadow-blue-500/10"
                     >
                         일지 작성
                     </button>
                 </div>
 
-                {/* 차트에 일지 이벤트(B/S/M 마커)와 클릭 이벤트 바인딩 */}
-                <div className="w-full">
-                    <SimpleChart
-                        chartData={chartResponse.chartData}
-                        newsEvents={events}
-                        journalEvents={tickerJournals}
-                        period={selectedPeriod}
-                        onJournalClick={handleJournalClick}
-                    />
-                </div>
-            </div>
-
-            {/* 일별 시세 리스트 섹션 (독립 카드 분리) */}
-            <div className="bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md flex-1 min-h-0 overflow-hidden">
-                <DailyPriceList
-                    dailyPrices={flatDailyPrices}
-                    onDateVisible={setActiveDate}
-                    scrollRef={scrollContainerRef}
+                {/* 차트 섹션 (흰색 바탕 카드로 독립 분리) */}
+                <div
+                    className={`transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md ${isChartVisible
+                            ? "h-[420px] opacity-100 mb-[24px] visible"
+                            : "h-0 opacity-0 mb-0 py-0 border-0 shadow-none pointer-events-none"
+                        }`}
                 >
-                    {/* 감지선 엘리먼트가 테이블 내부 스크롤 영역 최하단에 삽입됨 */}
-                    <div ref={observerRef} className="h-10 flex items-center justify-center text-sm text-gray-400 mt-[12px] border-t border-dotted border-slate-200 pt-[12px]">
-                        {isFetchingNextPage ? "시세를 더 불러오는 중..." : hasNextPage ? "스크롤하여 시세 더 보기" : "마지막 시세입니다."}
-                    </div>
-                </DailyPriceList>
-            </div>
+                    {/* 상단 툴바 컨트롤러 영역 - 항상 노출 */}
+                    <div className="flex justify-between items-center flex-shrink-0">
+                        {/* 좌측: 종목명 및 티커 + Selector */}
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="font-extrabold text-slate-800 text-xl tracking-tight uppercase">
+                                    {ticker}
+                                </span>
+                                <span className="text-xs font-semibold text-slate-500/80">
+                                    {tickerNames[ticker.toUpperCase()] || ""}
+                                </span>
+                            </div>
+                            <div className="h-4 w-[1px] bg-slate-200/80" />
+                            <Selector options={periodOptions} selected={selectedPeriod} onSelect={setSelectedPeriod} />
+                        </div>
 
-            {/* 일지 작성/상세 드로워 마운트 */}
-            <JournalDrawer
-                isOpen={isDrawerOpen}
-                onClose={handleDrawerClose}
-                ticker={ticker}
-                initialDate={selectedJournalDate}
-                existingJournal={selectedJournal}
-            />
+                        {/* 투자 일지 신규 작성 버튼 (디자인 시스템 파란색, 연필 아이콘 제거) */}
+                        <button
+                            onClick={handleNewJournalClick}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-500/10 active:scale-95"
+                        >
+                            일지 작성
+                        </button>
+                    </div>
+
+                    {/* 차트에 일지 이벤트(B/S/M 마커)와 클릭 이벤트 바인딩 */}
+                    <div className="w-full">
+                        <SimpleChart
+                            chartData={chartResponse.chartData}
+                            newsEvents={events}
+                            journalEvents={tickerJournals}
+                            period={selectedPeriod}
+                            onJournalClick={handleJournalClick}
+                        />
+                    </div>
+                </div>
+
+                {/* 일별 시세 리스트 섹션 (독립 카드 분리) */}
+                <div className="bg-white border border-slate-200/60 rounded-xl p-[24px] flex flex-col gap-[24px] shadow-md flex-1 min-h-0 overflow-hidden">
+                    <DailyPriceList
+                        dailyPrices={flatDailyPrices}
+                        onDateVisible={setActiveDate}
+                        scrollRef={scrollContainerRef}
+                    >
+                        {/* 감지선 엘리먼트가 테이블 내부 스크롤 영역 최하단에 삽입됨 */}
+                        <div ref={observerRef} className="h-10 flex items-center justify-center text-sm text-gray-400 mt-[12px] border-t border-dotted border-slate-200 pt-[12px]">
+                            {isFetchingNextPage ? "시세를 더 불러오는 중..." : hasNextPage ? "스크롤하여 시세 더 보기" : "마지막 시세입니다."}
+                        </div>
+                    </DailyPriceList>
+                </div>
+
+                {/* 일지 작성/상세 드로워 마운트 */}
+                <JournalDrawer
+                    isOpen={isDrawerOpen}
+                    onClose={handleDrawerClose}
+                    ticker={ticker}
+                    initialDate={selectedJournalDate}
+                    existingJournal={selectedJournal}
+                />
+            </div>
+            <RightNewsPanel />
         </div>
     )
 }
+
+export const Chart = () => {
+    return (
+        <NewsEventProvider>
+            <StockDetailPageContent />
+        </NewsEventProvider>
+    );
+};
 
 export const Route = createFileRoute('/stock/$ticker')({
     component: Chart,
